@@ -63,6 +63,7 @@ public class Game {
             }
             System.out.println("You Win!");
             this.isWinner = true;
+            playerInput.close();
 
         }
 

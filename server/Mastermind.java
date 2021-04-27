@@ -23,6 +23,7 @@ public class Mastermind {
         }
         for (Player player : this.players) {
             Game game=new Game(player, this.code);
+            games.add(game);
             game.startGame();
         }
 
