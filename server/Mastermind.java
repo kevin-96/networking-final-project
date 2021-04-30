@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class Mastermind {
 
-    private ArrayList<Player> players;
+    private ArrayList<Player> players;  // Players in a game
     private ArrayList<Game> games;
     private Integer[] code;// What the players are trying to guess
 
@@ -16,10 +16,10 @@ public class Mastermind {
         this.games = new ArrayList<Game>();
     }
 
-    public void createGames() {
-        randomizeCode();
-        while (!areDistinct(this.code)) {
-            randomizeCode();
+    public void createGames(int maxDigit, boolean allowDuplicates) {
+        randomizeCode(maxDigit);
+        while (!areDistinct(this.code) && !allowDuplicates) {
+            randomizeCode(maxDigit);
         }
         for (Player player : this.players) {
             Game game=new Game(player, this.code);
@@ -43,10 +43,10 @@ public class Mastermind {
         return (s.size() == arr.length);
     }
 
-    public void randomizeCode() {
+    public void randomizeCode(int maxDigit) {
         this.code = new Integer[4];
         for (int i = 0; i < this.code.length; i++) {
-            this.code[i] = (int) (Math.random() * 6);
+            this.code[i] = (int) (Math.random() * (maxDigit + 1));
         }
 
     }

@@ -33,7 +33,7 @@ public class Game {
                 currentGuess = new Integer[4];
                 System.out.println("--------------------");
                 if (allCodeGuesses.size() != 0) {
-                    displayGuessesAndMarks();
+                    //displayGuessesAndMarks();
                 }
                 String guess = playerInput.nextLine();
                 if (validateGuess(guess)) {
@@ -54,34 +54,20 @@ public class Game {
                     // debugDisplayArray(currentGuess);
 
                     String hitAndBlows = hitCount + "H" + blowCount + "B";
-                    this.allCodeGuesses.add(currentGuess);
-                    this.allHitsAndBlows.add(hitAndBlows);
+                    player.addGuess(currentGuess);
+                    //this.allCodeGuesses.add(currentGuess);
+                    //player.setAllGuesses
+                    player.setHitAndBlows(hitCount,blowCount);
+                    //this.allHitsAndBlows.add(hitAndBlows);
 
                 } else {
                     System.out.println("Invalid Guess, try again");
                 }
             }
-            System.out.println("You Win!");
+            //System.out.println("You Win!");
             this.isWinner = true;
             playerInput.close();
 
-        }
-
-    }
-
-    public static boolean areDistinct(Integer arr[]) {
-        // Put all array elements in a HashSet
-        Set<Integer> s = new HashSet<Integer>(Arrays.asList(arr));
-
-        // If all elements are distinct, size of
-        // HashSet should be same array.
-        return (s.size() == arr.length);
-    }
-
-    public void randomizeCode() {
-        this.code = new Integer[4];
-        for (int i = 0; i < this.code.length; i++) {
-            this.code[i] = (int) (Math.random() * 6);
         }
 
     }
@@ -121,6 +107,11 @@ public class Game {
             System.out.print(num);
         }
         System.out.println("");
+    }
+
+    public boolean playerHasWon()
+    {
+        return this.isWinner;
     }
 
 }
