@@ -6,6 +6,6 @@ public class Main
         System.out.println("Hi");
         Mastermind master=new Mastermind();
         master.addPlayer("James");
-        master.createGames();
+        master.createGames(5, false);
     }
 }

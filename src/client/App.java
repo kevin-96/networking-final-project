@@ -1,3 +1,5 @@
+package client;
+
 /**
  * The main entry point for the application
  * @author Joey Germain, Kevin Sangurima, Brian Carballo

@@ -1,4 +1,4 @@
-package gui;
+package client.gui;
 
 /**
  * The top-level gui component of the application
