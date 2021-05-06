@@ -13,8 +13,8 @@ public class GuessMessage extends Message {
     public GuessMessage(String name, int[] guess)
     {
         super(name);
-        this.name=name;
-        this.guess=guess;
+        this.name = name;
+        this.guess = guess;
     }
 
     public String getName()

@@ -15,6 +15,7 @@ import java.util.Set;
 import client.network.Connection;
 import common.CreateGameMessage;
 import common.GuessMessage;
+import common.JoinGameMessage;
 import common.JoinMessage;
 import common.Message;
 import common.SettingsMessage;
@@ -30,14 +31,19 @@ public class GameServer {
 
     // // Server Methods
 
-    private static GameState state;
+    private GameState state;
     // private Map<
-    private static ArrayList<Socket> sockets;
-    private static int[] code;
+    private ArrayList<Socket> sockets;
+    private ArrayList<ObjectOutputStream> outputs;
+    private ArrayList<ObjectInputStream> inputs;
+    private int[] code;
 
     public GameServer() {
         state = new GameState();
         sockets = new ArrayList<Socket>();
+        outputs = new ArrayList<ObjectOutputStream>();
+        inputs = new ArrayList<ObjectInputStream>();
+        code=new int[]{1,2,3,4};//Hard coded for now
         ServerSocket server = null;
         System.out.println("Server is active");
         try {
@@ -58,10 +64,13 @@ public class GameServer {
                 // Displaying that new client is connected
                 // to server
                 System.out.println("New client connected: " + client.getInetAddress().getHostAddress());
+
                 sockets.add(client);
 
-                //Might have to implement this here: once the socket is added, make 2 more arraylists of the sockets ObjectOutputStream and ObjectInputStream
-                //Since you cannot make 2 ObjectStreams of the same socket, it might be best to save thoise in arraylist.
+                // Might have to implement this here: once the socket is added, make 2 more
+                // arraylists of the sockets ObjectOutputStream and ObjectInputStream
+                // Since you cannot make 2 ObjectStreams of the same socket, it might be best to
+                // save thoise in arraylist.
 
                 // create a new thread object
                 ClientHandler clientSock = new ClientHandler(client);
@@ -84,47 +93,34 @@ public class GameServer {
         }
     }
 
-    private static Player processClientGuessMessage(GuessMessage msg) {
+    private void processClientGuessMessage(GuessMessage msg) {
         // Find the sender's player object and update its hit and blow count
-
-        ArrayList<Player> players = state.getAllPlayers();
-        for (Player player : players) {
-            if (player.getPlayerName().equals(msg.getName())) {
-                int[] hab = guess(msg.getGuess());
-                player.setHitAndBlows(hab[0], hab[1]);
-                return player;
-            }
-        }
-        return null;
-
-        // Update other players
-        // for (Connection c : this.connections) { // Send player
-        // object on object output stream
-        /*
         try {
-            // For now, just sends it to one client
-            FileOutputStream file = new FileOutputStream("file.txt");
-            ObjectOutputStream output = new ObjectOutputStream(file); // Create the ObjectOutputStream
-            output.writeObject(currentPlayer); // Add the currentPlayer object to the ObjectOutputSteam
-            System.out.println("Player: " + currentPlayer.getPlayerName() + "Hit Count: " + currentPlayer.getHitCount()
-                    + "Blow Count: " + currentPlayer.getBlowCount());
+            ArrayList<Player> players = state.getAllPlayers();
+            Player currPlayer = null;
+            for (Player player : players) {
+                if (player.getPlayerName().equals(msg.getName())) {
+                    int[] hab = guess(msg.getGuess());
+                    System.out.println("H"+hab[0]+"B"+hab[1]);
+                    player.setHitAndBlows(hab[0], hab[1]);
+                    currPlayer = player;
+                }
+            }
+            // Print again
+            System.out.printf("Hits: %d; Blows: %d\n", currPlayer.getHitCount(), currPlayer.getBlowCount());
+
+            for (ObjectOutputStream output : outputs) {
+                output.writeObject(currPlayer);
+                output.reset();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        */
-
-        // Send Player, specifically the name, the hit
-        // count, the blow count, to each connection //
-
-        // }
-
-        // //for connection c in connections
-        // // send c gameState
     }
 
-    private static Message processClientJoinMessage(JoinMessage msg) {
+    private Message processClientJoinMessage(JoinMessage msg) {
         try {
-            return new Message("Welcome " + msg.getName() + " to Hit and Blow!");
+            return new JoinGameMessage(state.getAllPlayers(), state.didGameStart());
         } catch (Exception e) {
             e.printStackTrace();
             return new Message("Error");
@@ -132,20 +128,21 @@ public class GameServer {
 
     }
 
-    private static SettingsMessage processClientCreateGameMessage(CreateGameMessage msg) { // bool
+    private SettingsMessage processClientCreateGameMessage(CreateGameMessage msg) { // bool
         // allowDuplicates=msg.allowDublicates // int maxDigit=msg.maxDigit
         int maxDigit = 5;
         boolean allowDuplicates = false;
-        randomizeCode(maxDigit);
+        this.code = GameServer.randomizeCode(maxDigit);
         while (!areDistinct(code) && !allowDuplicates) {
             randomizeCode(maxDigit);
         }
-        return new SettingsMessage(maxDigit,allowDuplicates);
+        this.state.startGame();
+        return new SettingsMessage(maxDigit, allowDuplicates);
         // TODO: Create error of duplicate
 
     }
 
-    private static int[] guess(int[] currentGuess) {
+    private int[] guess(int[] currentGuess) {
         int hitCount = 0;
         int blowCount = 0;
         for (int i = 0; i < currentGuess.length; i++) {
@@ -172,28 +169,32 @@ public class GameServer {
         return false;
     }
 
-    private static boolean areDistinct(Integer arr[]) {
+    private static boolean areDistinct(int[] arr) {
         // Put all array elements in a HashSet
-        Set<Integer> s = new HashSet<Integer>(Arrays.asList(arr));
+        Set<Integer> s = new HashSet<Integer>();
+        for (int i : arr) {
+            s.add(i);
+        }
 
         // If all elements are distinct, size of
         // HashSet should be same array.
         return (s.size() == arr.length);
     }
 
-    private static void randomizeCode(int maxDigit) {
-        code = new int[4];
+    private static int[] randomizeCode(int maxDigit) {
+        int[] code = new int[4];
         for (int i = 0; i < code.length; i++) {
             code[i] = (int) (Math.random() * (maxDigit + 1));
         }
+        return code;
 
     }
 
     public static void main(String args[]) {
-        GameServer gs=new GameServer();
+        GameServer gs = new GameServer();
     }
 
-    private static class ClientHandler implements Runnable {
+    private class ClientHandler implements Runnable {
         private final Socket clientSocket;
 
         // Constructor
@@ -205,28 +206,39 @@ public class GameServer {
             // Creates inputs and outputs
             ObjectInputStream input = null;
             ObjectOutputStream output = null;
+
             try {
-                
-                // Creates an ObjectInputStream
-                output = new ObjectOutputStream(this.clientSocket.getOutputStream());//Only one of these should be made per player
-                input = new ObjectInputStream(this.clientSocket.getInputStream());//Only one of these should be made per player
-                // Reads the objects
-
-                Message msg = (Message) input.readObject();
-                if (msg instanceof JoinMessage) {
-                    System.out.println("JoinMessage Recieved");
-                    Message toSend=processClientJoinMessage((JoinMessage) msg);
-                    output.writeObject(toSend);
-                    output.flush();
-                    System.out.println("Message Sent");
-                } else if (msg instanceof GuessMessage) {
-                    System.out.println("GuessMessage Recieved");
-                    Player player=processClientGuessMessage((GuessMessage) msg);
-                } else if (msg instanceof CreateGameMessage) {
-                    processClientCreateGameMessage((CreateGameMessage) msg);
+                output = new ObjectOutputStream(this.clientSocket.getOutputStream());// Only one of these should be made
+                                                                                     // // per player
+                input = new ObjectInputStream(this.clientSocket.getInputStream());// Only one of these should be made //
+                                                                                  // per player
+                outputs.add(output);
+                inputs.add(input);
+        
+                while (true) {
+                    Message msg = (Message) input.readObject();
+                    System.out.println(msg.getMessage());
+                    if (msg instanceof JoinMessage) {
+                        System.out.println("JoinMessage Received");
+                        JoinMessage jm = (JoinMessage) msg;
+                        state.addPlayer(jm.getName());
+                        Message toSend = processClientJoinMessage(jm);
+                        output.writeObject(toSend);
+                        output.flush();
+                        System.out.println("Message Sent");
+                    } else if (msg instanceof GuessMessage) {
+                        System.out.println("GuessMessage Received");
+                        processClientGuessMessage((GuessMessage) msg);
+                    } else if (msg instanceof CreateGameMessage) {
+                        System.out.println("CreateGameMessage Received");
+                        CreateGameMessage cm = (CreateGameMessage) msg;
+                        SettingsMessage toSend = processClientCreateGameMessage(cm);
+                        output.writeObject(toSend);
+                        output.reset();
+                        GameServer.this.processClientCreateGameMessage((CreateGameMessage) msg);
+                    }
+                    // This hangs here until a message is sent
                 }
-                // This hangs here until a message is sent
-
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
@@ -235,14 +247,18 @@ public class GameServer {
 
             } catch (Exception e) {
                 System.out.println("Connection reset error");
-            } /*
-               * finally { try { if (output != null) { //output.close();
-               * System.out.println(""); } if (input != null) { //input.close();
-               * //clientSocket.close(); } } catch (IOException e) { //e.printStackTrace(); //
-               * }
-               * 
-               * }
-               */
+                e.printStackTrace();
+            }
+            // Creates an ObjectInputStream
+
+            /*
+             * finally { try { if (output != null) { //output.close();
+             * System.out.println(""); } if (input != null) { //input.close();
+             * //clientSocket.close(); } } catch (IOException e) { //e.printStackTrace(); //
+             * }
+             * 
+             * }
+             */
         }
 
         public void sendMessage(Message m)// Should send any message
@@ -252,8 +268,8 @@ public class GameServer {
             try {
 
                 // Creates an ObjectInputStream
-                output = new ObjectOutputStream(this.clientSocket.getOutputStream());
-                input = new ObjectInputStream(this.clientSocket.getInputStream());
+                // output = new ObjectOutputStream(this.clientSocket.getOutputStream());
+                // input = new ObjectInputStream(this.clientSocket.getInputStream());
 
                 // Reads the objects
 

@@ -5,7 +5,7 @@ public class JoinMessage extends Message {
     
     public JoinMessage(String name){
         super(name);
-        this.name=name;
+        this.name = name;
     }
 
     public String getName()

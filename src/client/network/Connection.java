@@ -3,7 +3,9 @@ package client.network;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
+import common.GuessMessage;
 import common.JoinMessage;
 import common.Message;
 import server.Player;
@@ -49,19 +51,38 @@ public class Connection {
     }
 
     public void inGame() {
+        Scanner s = new Scanner(System.in);
+        String tempName = s.nextLine();
 
         try {
-            // Occures when the user first joins a game
+            // Occurs when the user first joins a game
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
-            out.writeObject(new JoinMessage("James"));
-            out.flush();
+            out.writeObject(new JoinMessage(tempName));
+            out.reset();
             while (true) {// I think this needs a while loop as well cause it needs to wait for a server
                           // response but I could be wrong
-
                 // Removing this line causes the server to crash
-                Message response = (Message) input.readObject();// DEBUG
-                System.out.println(response.getMessage());
+                Object response = input.readObject();// DEBUG
+                if(response instanceof Message)
+                {
+                    Message m = (Message) response;
+                    System.out.println(m.getMessage());
+                }
+                if(response instanceof Player)
+                {
+                    Player p = (Player) response;
+                    System.out.println("Player: " + p.getPlayerName() + " Hits = " + p.getHitCount() + " Blows = " + p.getBlowCount());
+                }
+                
+                String line = s.nextLine();
+                int[] guess = new int[4];
+                for(int i = 0; i < guess.length; i++) {
+                    guess[i] = line.charAt(i) - '0';
+                }
+                out.writeObject(new GuessMessage(tempName, guess));
+                out.reset();
+                
                 // System.out.println(response.getMessage());//DEBUG
 
             }

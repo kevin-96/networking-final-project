@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class Player implements Serializable {
     
     private String playerName;
-    //Latest hit and blows
+    // Latest hit and blows
     private int hitCount;
     private int blowCount;
 
@@ -30,7 +30,7 @@ public class Player implements Serializable {
 
     public void setHitAndBlows(int hits, int blows)
     {
-        this.hitCount=hits;
-        this.blowCount=blows;
+        this.hitCount = hits;
+        this.blowCount = blows;
     }
 }
