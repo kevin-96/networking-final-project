@@ -1,16 +1,15 @@
 package server;
 
-public class Player {
+public class Player implements Serializable {
     
     private String playerName;
+    //Latest hit and blows
     private int hitCount;
     private int blowCount;
-    private ArrayList <Integer[]> guesses;
 
     public Player(String name)
     {
         this.playerName=name;
-        this.guesses=new ArrayList<Integer[]>();
     }
 
     public String getPlayerName(){
@@ -27,28 +26,9 @@ public class Player {
         return this.blowCount;
     }
 
-    public int getAllGuesses()
-    {
-        return this.guesses;
-    }
-
     public void setHitAndBlows(int hits, int blows)
     {
-        this.hits=hits;
-        this.blows=blows;
+        this.hitCount=hits;
+        this.blowCount=blows;
     }
-
-    public void setGuesses(ArrayList<Integer[]> guesses)
-    {
-        this.guesses=guesses;
-    }
-
-    public void addGuess(Integer[] guess)
-    {
-        this.guesses.add(guess);
-    }
-
-
-
-
 }

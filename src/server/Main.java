@@ -4,7 +4,7 @@ public class Main
     public static void main(String args[])
     {
         System.out.println("Hi");
-        Mastermind master=new Mastermind();
+        GameState master=new GameState();
         master.addPlayer("James");
         master.createGames();
     }
