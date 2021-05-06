@@ -16,8 +16,8 @@ public class GameState {
         return instance;
     }
 
-    private ArrayList<Player> players;  // Players in a game
-    //private ArrayList<Game> games;
+    private ArrayList<Player> players; // Players in a game
+    // private ArrayList<Game> games;
     private Integer[] code;// What the players are trying to guess
 
     public GameState() {
@@ -29,15 +29,7 @@ public class GameState {
         this.players.add(player);
     }
 
-    
-
-    public ArrayList<Player> getAllPlayers()
-    {
+    public ArrayList<Player> getAllPlayers() {
         return this.players;
-    }
-
-    public ArrayList<Game> getAllGame()
-    {
-        return this.games;
     }
 }
