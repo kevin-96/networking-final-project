@@ -6,6 +6,6 @@ public class Main
         System.out.println("Hi");
         GameState master=new GameState();
         master.addPlayer("James");
-        master.createGames();
+        master.createGames(5, false);
     }
 }
