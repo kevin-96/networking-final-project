@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import server.Player;
 
 import client.gui.MainWindow;
-import client.logic.TempSettings;
+import client.logic.Settings;
 
 /**
  * The top-level gui component of the application
@@ -18,7 +18,7 @@ public class Client {
         // Set up main window
         window = new MainWindow();
         window.display();
-        window.processSettings(TempSettings.getDefaultSettings());
+        window.processSettings(Settings.getDefaultSettings());
         window.processState(new ArrayList<Player>());
 
     }

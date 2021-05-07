@@ -3,16 +3,33 @@ package server;
 import java.io.Serializable;
 
 public class Guess implements Serializable {
-    public int[] digits;
-    public int hitCount;
-    public int blowCount;
+    private int[] digits;
+    private int hitCount;
+    private int blowCount;
 
-    public static String convert(int[] guess) {
-        StringBuffer buf = new StringBuffer();
-        for (int i : guess) {
-            buf.append(i);
-        }
-        return buf.toString();
+    public Guess(int hitCount, int blowCount, int[] digits) {
+        this.hitCount = hitCount;
+        this.blowCount = blowCount;
+        this.digits = digits;
     }
 
+    public static String convertToString(int[] guess) {
+        StringBuilder str = new StringBuilder();
+        for (int i : guess) {
+            str.append(i);
+        }
+        return str.toString();
+    }
+
+    public int[] getDigits() {
+        return digits;
+    }
+
+    public int getHitCount() {
+        return hitCount;
+    }
+
+    public int getBlowCount() {
+        return blowCount;
+    }
 }

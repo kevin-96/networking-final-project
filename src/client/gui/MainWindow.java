@@ -1,7 +1,7 @@
 package client.gui;
 
 // import client.logic.TempPlayer;
-import client.logic.TempSettings;
+import client.logic.Settings;
 import client.network.Connection;
 import common.Message;
 import common.SendAllPlayersMessage;
@@ -14,7 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-        import java.util.List;
+import java.util.List;
 
 public class MainWindow {
     private static final int REFRESH_RATE = 1000;
@@ -30,27 +30,25 @@ public class MainWindow {
     private int codeLength;
     private String playerName;
 
-    private TempSettings settings;
-    // private TempState state;
+    private Settings settings;
     private Connection connection;
 
-    public TempSettings getSettings() {
+    public Settings getSettings() {
         try {
             return settings.clone();
         } catch (NullPointerException | CloneNotSupportedException e) {
             System.err.println("Error in getSettings: " + e.getLocalizedMessage());
-            return TempSettings.getDefaultSettings();
+            return Settings.getDefaultSettings();
         }
     }
 
-    public void processSettings(TempSettings settings) {
+    public void processSettings(Settings settings) {
         if (settings == null) {
             return;
         }
         this.settings = settings;
         this.playerName = settings.playerName;
         this.codeLength = settings.codeLength;
-        int maxDigit = settings.maxDigit;
 
         // Update GUI
         try {
@@ -60,15 +58,13 @@ public class MainWindow {
                     ? String.format("Connected to %s:%d", settings.serverAddress, settings.port) + spectatorLabel
                     : "Disconnected");
 
-            // If inputs haven't been initialized yet, add them in
+            // If player controls (number inputs and submit button) haven't been initialized yet, add them in
             if (playerControls.getComponents().length == 0) {
-                // Number input fields
+                // Number input fields (one for each digit in the code)
                 for (int i = 0; i < codeLength; i++) {
-                    SpinnerModel model = new SpinnerNumberModel(0, 0, maxDigit, 1);
+                    SpinnerModel model = new SpinnerNumberModel(0, 0, settings.maxDigit, 1);
                     JSpinner numberInput = new JSpinner(model);
-                    if (this.playerControls != null) {
-                        this.playerControls.add(numberInput);
-                    }
+                    this.playerControls.add(numberInput);
                 }
 
                 // Submit button
@@ -77,17 +73,15 @@ public class MainWindow {
                 submit.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        // Combine the numbers the user entered into a string
-                        StringBuilder guessDigits = new StringBuilder();
+                        // Get the guess based on the input fields
+                        int[] guess = new int[codeLength];
                         for (int i = 0; i < codeLength; i++) {
                             JSpinner input = (JSpinner) MainWindow.this.playerControls.getComponents()[i];
-                            guessDigits.append(input.getValue());
+                            guess[i] = (Integer) input.getValue();
                         }
-                        String[] guessToString = guessDigits.toString().split("");
-                        int[] guess = new int[4];
-                        for (int i = 0; i < guess.length; i++) {
-                            guess[i] = Integer.valueOf(guessToString[i]);
-                        }
+
+                        System.out.println("Guessed " + Guess.convertToString(guess));
+
                         MainWindow.this.connection.guess(guess);
                     }
                 });
@@ -97,7 +91,7 @@ public class MainWindow {
                 parent.pack();
             }
 
-            // Disable controls if disconnected
+            // Disable controls if disconnected or spectating
             for (Component control : playerControls.getComponents()) {
                 control.setEnabled(settings.isConnected && !settings.isSpectator);
             }
@@ -107,9 +101,7 @@ public class MainWindow {
     }
 
     public void processState(List<Player> players) {
-
-        // State
-
+        // If the player is part of the game, get them from the player list
         Player currentPlayer = null;
         for (Player p : players) {
             if (p.getPlayerName().equals(this.playerName)) {
@@ -120,43 +112,38 @@ public class MainWindow {
 
         // Only update guesses if the player is not a spectator (in which case they aren't in the players list)
         if (currentPlayer != null) {
+            // Build table data set
             DefaultTableModel guessModel = new DefaultTableModel(0, 3);
-
-            guessModel.addRow(new Object[] { "Guess", "Hits", "Blows" });
-
+            guessModel.addRow(new Object[] { "Guess", "Hits", "Blows" }); // Header
             for (Guess guess : currentPlayer.getAllGuesses()) {
-                guessModel.addRow(new Object[] { Guess.convert(guess.digits), String.valueOf(guess.hitCount),
-                        String.valueOf(guess.blowCount) });
+                guessModel.addRow(new Object[] { Guess.convertToString(guess.getDigits()), guess.getHitCount(), guess.getBlowCount()});
             }
 
+            // Apply new data set to table
             this.currentPlayerGuesses.setModel(guessModel);
             this.currentPlayerGuesses.revalidate();
             this.currentPlayerGuesses.repaint();
         }
 
-        // Player rows
+        // Update the player list
         DefaultTableModel playersModel = new DefaultTableModel(0, 3);
-
-        playersModel.addRow(new Object[] { "Player", "Hits", "Blows" });
-
+        playersModel.addRow(new Object[] { "Player", "Hits", "Blows" }); // Header
         for (Player player : players) {
-            playersModel.addRow(new Object[] { player.getPlayerName(), String.valueOf(player.getHitCount()),
-                    String.valueOf(player.getBlowCount()) });
+            playersModel.addRow(new Object[] { player.getPlayerName(), player.getHitCount(), player.getBlowCount() });
         }
 
+        // Apply new data set to table
         this.allPlayerHitCount.setModel(playersModel);
 
-
+        // Repaint app
         parent.revalidate();
         parent.repaint();
-
         root.revalidate();
         root.repaint();
-
-
     }
 
     public void display() {
+        // Make sure we have a frame to hold the gui
         if (parent == null || !parent.isDisplayable()) {
             parent = new JFrame("Mastermind Royale");
             parent.setContentPane(root);
@@ -167,7 +154,7 @@ public class MainWindow {
     }
 
     public MainWindow() {
-
+        // Trigger connection settings popup when button is pressed
         connectionSettingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -177,61 +164,40 @@ public class MainWindow {
 
         // Refresh game state every {REFRESH_RATE} milliseconds
         Timer timer = new Timer(REFRESH_RATE, new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                MainWindow.this.updateState();
+            public void actionPerformed(ActionEvent e) {
+                MainWindow.this.refreshState();
             }
         });
 
         this.playerControls.setLayout(new FlowLayout());
 
-        String[] guessColumns = new String[] { "Guess", "Hits", "Blows" };
-        DefaultTableModel guessModel = new DefaultTableModel(0, 3);
-        guessModel.addRow(guessColumns);
-        this.currentPlayerGuesses.setModel(guessModel);
-
-        String[] playerColumns = new String[] { "Player", "Hits", "Blows" };
-        DefaultTableModel playersModel = new DefaultTableModel(0, 3);
-        playersModel.addRow(playerColumns);
-        allPlayerHitCount.setModel(playersModel);
-        // isDisplayingWinDialog = false;
+        // Start polling for state updates
         timer.start();
     }
 
+    // Make a connection. Throws an exception if this process fails.
     public void setConnection(String server, int port, String name, boolean isSpectator) throws Exception {
         this.connection = new Connection(server, port, name, isSpectator);
     }
 
-    private void updateState() {
+    // Ask server for a new state and process the response
+    private void refreshState() {
         if (this.connection != null) {
-            Message state = this.connection.getState();
+            Message stateMessage = this.connection.getState();
 
-            if (state instanceof SendAllPlayersMessage) {
-                processState(((SendAllPlayersMessage) state).getAllPlayers());
-            } else if (state instanceof WinMessage) {
-
-                // Clear out guesses by sending an empty state
-
-
-                // isDisplayingWinDialog = true;
-                
-                WinMessage winner = (WinMessage) state;
+            if (stateMessage instanceof SendAllPlayersMessage) {
+                // We're getting a player list
+                processState(((SendAllPlayersMessage) stateMessage).getAllPlayers());
+            } else if (stateMessage instanceof WinMessage) {
+                // Someone won, so we received a win message instead
+                WinMessage winner = (WinMessage) stateMessage;
                 System.out.println(winner.getName() + " Has Won");
-                String winText = winner.getName() + " broke the code! Code: " + intArrayToString(winner.getCode());
-                JOptionPane.showMessageDialog(null, winText, "Game Over!", JOptionPane.PLAIN_MESSAGE);
+                String winText = winner.getName() + " broke the code! Code: " + Guess.convertToString(winner.getCode());
+                SimpleDialog.showInfoDialog(winText, "Game Over!");
 
-                processState(((WinMessage) state).getAllPlayers());
+                processState(((WinMessage) stateMessage).getAllPlayers());
             }
-
-            // processState(this.players);
         }
-    }
-
-    public String intArrayToString(int[] arr) {
-        StringBuilder str = new StringBuilder();
-        for (int i = 0; i < arr.length; i++) {
-            str.append(Integer.toString(arr[i]));
-        }
-        return str.toString();
     }
 
 }

@@ -5,12 +5,16 @@ GameServer hosts a game of Hit and Blow. Send messages between itself and the co
  */
 
 package server;
+
+import common.*;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
 import java.util.*;
-import common.*;
 
 /**************
  * GameServer class Authors: Phillip Nam, James Jacobson, Ryan Clark Spring 2021
@@ -22,31 +26,29 @@ import common.*;
 public class GameServer {
 
     private GameState state;
-    private List<ClientHandler> clients;//A list of each thread. Contains the Object Output and Input stream of the socket
-    private int[] code;//Code everyone is trying to guess
+    private List<ClientHandler> clients; // A list of each thread. Contains the Object Output and Input stream of the socket
+    private int[] code; // Code everyone is trying to guess
 
     public GameServer() {
         state = new GameState();
-        code = this.createCode(5,false);
-        clients = new Vector<ClientHandler>();
+        code = this.createCode(5, false); // Hard-code setting that all digits must be distinct
+        clients = new Vector<>();
         ServerSocket server = null;
 
-        //Input the port you wish to run the game on
+        // Input the port you wish to run the game on
         System.out.println("Enter port number");
-        Scanner scan= new Scanner(System.in);
-        int port=scan.nextInt();
+        Scanner scan = new Scanner(System.in);
+        int port = scan.nextInt();
         System.out.println("Server is active on port " + port);
         scan.close();
 
         try {
-
             //Creates the server
             server = new ServerSocket(port);
             server.setReuseAddress(true);
 
             // running infinite loop for getting new client request
             while (true) {
-
                 //Create socket that accepts new client connections
                 Socket client = server.accept();
                 System.out.println("New client connected: " + client.getInetAddress().getHostAddress());
@@ -77,10 +79,7 @@ public class GameServer {
                     int[] hab = guess(msg.getGuess());
                     System.out.println("H" + hab[0] + "B" + hab[1]);
                     synchronized (state) {
-                        Guess guess=new Guess();
-                        guess.hitCount=hab[0];
-                        guess.blowCount=hab[1];
-                        guess.digits=msg.getGuess();
+                        Guess guess = new Guess(hab[0], hab[1], msg.getGuess());
                         player.addGuess(guess);
                     }
                 }
@@ -94,7 +93,7 @@ public class GameServer {
         if (name == null) {
             return false;
         }
-        for (Player player : state.getAllPlayers())  {
+        for (Player player : state.getAllPlayers()) {
             if (player.getPlayerName().equals(name)) {
                 return true;
             }
@@ -114,14 +113,14 @@ public class GameServer {
         try {
             List<Player> players = state.getAllPlayers();
             for (Player player : players) {
-                if (player.getAllGuesses().size()>0 && player.getHitCount() == 4) {
+                if (player.getAllGuesses().size() > 0 && player.getHitCount() == 4) {
                     for (Player losers : players) {
                         losers.reset();
                     }
                     int maxDigit = 5;
                     boolean allowDuplicates = false;
-                    int[] oldCode=this.code;
-                    this.code=this.createCode(maxDigit, false);
+                    int[] oldCode = this.code;
+                    this.code = this.createCode(maxDigit, false);
                     // Send everyone a win message
                     for (ClientHandler client : clients) {
                         client.getOutput().writeObject(new WinMessage(player.getPlayerName(), players, oldCode));
@@ -149,7 +148,7 @@ public class GameServer {
                 }
             }
         }
-        return new int[] { hitCount, blowCount };
+        return new int[]{hitCount, blowCount};
     }
 
     //Creates an array of unique ints
@@ -172,9 +171,8 @@ public class GameServer {
     }
 
     //Creates a new code based on the highest digit and if duplicates are allowed
-    private int[] createCode(int maxDigit, boolean dups)
-    {
-        int [] code = GameServer.randomizeCode(maxDigit);
+    private int[] createCode(int maxDigit, boolean dups) {
+        int[] code = GameServer.randomizeCode(maxDigit);
         while (!areDistinct(code) && !dups) {
             code = randomizeCode(maxDigit);
         }
@@ -239,12 +237,7 @@ public class GameServer {
                 //If a player leaves, remove them from the player list
                 System.out.println(this.playerName + " has left the game");
                 state.removePlayer(this.playerName);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
             } catch (Exception e) {
-                System.out.println("Connection reset error");
                 e.printStackTrace();
             }
         }

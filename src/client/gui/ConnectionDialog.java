@@ -1,6 +1,6 @@
 package client.gui;
 
-import client.logic.TempSettings;
+import client.logic.Settings;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -17,25 +17,26 @@ public class ConnectionDialog extends JDialog {
     private MainWindow window;
 
     public ConnectionDialog(MainWindow window) {
+        // Basic setup
         this.window = window;
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
         setTitle("Connection Settings");
 
+        // Setup button click behavior
         buttonOK.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 onOK();
             }
         });
-
         buttonCancel.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 onCancel();
             }
         });
 
-        // call onCancel() when cross is clicked
+        // Call onCancel() when close button is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -43,14 +44,14 @@ public class ConnectionDialog extends JDialog {
             }
         });
 
-        // call onCancel() on ESCAPE
+        // Call onCancel() when escape key is pressed
         contentPane.registerKeyboardAction(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 onCancel();
             }
         }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-
+        // For the "port" field, only let the user type in numbers, and set a max length of 5
         portField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -77,7 +78,7 @@ public class ConnectionDialog extends JDialog {
         });
 
         // Fill in settings with current settings
-        TempSettings settings = window.getSettings();
+        Settings settings = window.getSettings();
         serverAddressField.setText(settings.serverAddress);
         portField.setText(String.valueOf(settings.port));
         nameField.setText(settings.playerName);
@@ -85,23 +86,24 @@ public class ConnectionDialog extends JDialog {
     }
 
     private void onOK() {
+        // Get settings from fields
         String server = serverAddressField.getText();
         int port = Integer.parseInt(portField.getText());
         boolean spectator = spectatorToggle.isSelected();
         String playerName= nameField.getText();
 
-        // TODO try to connect
-
-        boolean isConnected = true;
-
-        try{
+        // Try to connect to server
+        boolean isConnected;
+        try {
             window.setConnection(server, port, playerName, spectator);
+            isConnected = true;
         } catch (Exception e) {
             isConnected = false;
-            JOptionPane.showMessageDialog(null, "Connection failed: " + e.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            SimpleDialog.showErrorDialog("Connection failed: " + e.getLocalizedMessage());
         }
 
-        TempSettings settings = window.getSettings();
+        // Update settings for the client
+        Settings settings = window.getSettings();
         settings.serverAddress = server;
         settings.port = port;
         settings.isSpectator = spectator;
@@ -109,6 +111,7 @@ public class ConnectionDialog extends JDialog {
         settings.playerName = playerName;
         window.processSettings(settings);
 
+        // If connection succeeded, close the dialog
         if (isConnected) {
             dispose();
         }
