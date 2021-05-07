@@ -1,9 +1,9 @@
 package client.network;
 
 /*
-  Connection handling
-
+  Connection
   @author Brian Carballo, Kevin Sangurima
+  The connection that the player has to the server. Sends and retrieves messages to and from server
  */
 
 import java.io.IOException;
@@ -15,17 +15,13 @@ import common.*;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class Connection implements Serializable {
-    private transient final String hostname;
-    private transient final String name;
-    private transient final int port;
+public class Connection {
+    private final String hostname;
+    private final String name;
+    private final int port;
     private ObjectInputStream in;
-    private transient ObjectOutputStream out;
+    private ObjectOutputStream out;
     private boolean isPlaying;
-
-    public static void main(String[] args) throws Exception {
-        new Connection("127.0.0.1", 1234, "Message", false);
-    }
 
     public Connection(String hostname, int port, String name, boolean isSpectator) throws Exception {
         this.hostname = hostname;
@@ -43,12 +39,11 @@ public class Connection implements Serializable {
         this.out = new ObjectOutputStream(socket.getOutputStream());
         this.in = new ObjectInputStream(socket.getInputStream());
 
-        // This thread will handle the client
-        // separately
+        //Once connected, join the game
         joinGame();
-        //Needs a parameter that see if it is a spectator or not
     }
 
+    //Sends a guess message once the user clicks the submit guess button
     public void guess(int[] guess) {
 
         try {
@@ -61,6 +56,8 @@ public class Connection implements Serializable {
 
 
     }
+
+    //Sends a join game message, gets a JoinGameMessage in response. Server add the player
     public void joinGame() throws Exception {
         // Occurs when the user first joins a games
         this.out.writeObject(new JoinMessage(this.name, isPlaying));
@@ -83,10 +80,10 @@ public class Connection implements Serializable {
         }
     }
 
+    // Occurs when the user first joins a games
     public Message getState()
     {
         try {
-            // Occurs when the user first joins a games
             this.out.writeObject(new RequestAllPlayersMessage());// Hard coded true
             this.out.reset();
             return (Message) this.in.readObject();

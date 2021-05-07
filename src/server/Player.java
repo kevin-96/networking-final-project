@@ -1,3 +1,8 @@
+/*
+Player class
+Author:James Jacobson
+ */
+
 package server;
 
 import java.io.Serializable;
@@ -7,7 +12,6 @@ import java.util.List;
 public class Player implements Serializable {
     
     private String playerName;
-    // Latest hit and blows
     private List<Guess> allGuesses;
 
     public Player(String name)
@@ -23,6 +27,7 @@ public class Player implements Serializable {
 
     public List<Guess> getAllGuesses(){return this.allGuesses;}
 
+    //Returns the latest hit count. If there are no guesses, defaults to 0
     public int getHitCount()
     {
         if(allGuesses.size()>0) {
@@ -34,6 +39,7 @@ public class Player implements Serializable {
         }
     }
 
+    //Returns the latest blow count. If there are no guesses, defaults to 0
     public int getBlowCount()
     {
         if(allGuesses.size()>0) {
@@ -50,6 +56,7 @@ public class Player implements Serializable {
         this.allGuesses.add(guess);
     }
 
+    //Occurs when a player has won the game. Deletes all guesses
     public void reset()
     {
         this.allGuesses = new ArrayList<Guess>() ;

@@ -1,5 +1,8 @@
 package common;
-
+/*
+GuessMessage
+Author:James Jacobson
+ */
 public class GuessMessage extends Message {
 
     String name;

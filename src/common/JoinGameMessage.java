@@ -1,3 +1,9 @@
+/*
+JoinGameMessage
+Author:James Jacobson
+Sever sends a message that the client has joined a game, includes game data
+ */
+
 package common;
 
 import java.util.List;

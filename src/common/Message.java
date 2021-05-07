@@ -1,3 +1,8 @@
+/*
+Message
+Author:James Jacobson
+Contains a message that can be sent to and from the server
+ */
 package common;
 
 import java.io.Serializable;

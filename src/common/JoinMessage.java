@@ -1,3 +1,9 @@
+/*
+JoinMessage
+Author:James Jacobson
+Client joins server
+ */
+
 package common;
 
 public class JoinMessage extends Message {

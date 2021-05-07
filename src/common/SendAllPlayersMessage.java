@@ -1,3 +1,8 @@
+/*
+SendAllPlayersMessage
+Author:James Jacobson
+ */
+
 package common;
 
 import java.util.List;

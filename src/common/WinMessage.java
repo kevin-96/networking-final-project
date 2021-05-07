@@ -1,3 +1,9 @@
+/*
+WinMessage
+Author:James Jacobson
+Message containing all of the players, the player who won, and the previous code
+ */
+
 package common;
 
 import server.Player;

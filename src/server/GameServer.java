@@ -1,3 +1,9 @@
+/*
+GameServer
+Author:James Jacobson
+GameServer hosts a game of Hit and Blow. Send messages between itself and the connection to the player
+ */
+
 package server;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -15,58 +21,40 @@ import common.*;
 
 public class GameServer {
 
-    // // Server Methods
-
     private GameState state;
-    private List<ClientHandler> clients;
-    // private Map<
-
-    private int[] code;
+    private List<ClientHandler> clients;//A list of each thread. Contains the Object Output and Input stream of the socket
+    private int[] code;//Code everyone is trying to guess
 
     public GameServer() {
         state = new GameState();
-        //code = this.createCode(5,false);
-        code = new int[]{1,2,3,4};//DEBUG
+        code = this.createCode(5,false);
         clients = new Vector<ClientHandler>();
         ServerSocket server = null;
+
+        //Input the port you wish to run the game on
         System.out.println("Enter port number");
         Scanner scan= new Scanner(System.in);
         int port=scan.nextInt();
         System.out.println("Server is active on port " + port);
         scan.close();
+
         try {
 
-            // GuessMessage
-            //
-            // server is listening on port 1234
+            //Creates the server
             server = new ServerSocket(port);
             server.setReuseAddress(true);
 
-            // running infinite loop for getting
-            // client request
+            // running infinite loop for getting new client request
             while (true) {
 
-                // socket object to receive incoming client
-                // requests
+                //Create socket that accepts new client connections
                 Socket client = server.accept();
-
-                // Displaying that new client is connected
-                // to server
                 System.out.println("New client connected: " + client.getInetAddress().getHostAddress());
 
-                // Might have to implement this here: once the socket is added, make 2 more
-                // arraylists of the sockets ObjectOutputStream and ObjectInputStream
-                // Since you cannot make 2 ObjectStreams of the same socket, it might be best to
-                // save thoise in arraylist.
-
-                // create a new thread object
+                // create a new thread that will handle the client separately
                 ClientHandler clientSock = new ClientHandler(client);
                 clients.add(clientSock);
-
-                // This thread will handle the client
-                // separately
                 new Thread(clientSock).start();
-                // System.out.println("Yuh");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -114,28 +102,26 @@ public class GameServer {
         return false;
     }
 
+    //Send all of the players to a newly joined client
     private Message processClientJoinMessage() {
         return new JoinGameMessage(state.getAllPlayers(), state.didGameStart());
     }
 
 
-
+    //Sends out a list of players to every player
+    //If someone has 4 hit(win condition) every players guess is wiped out, and a new code is generated
     private Message processRequestAllPlayers() { // bool
         try {
             List<Player> players = state.getAllPlayers();
             for (Player player : players) {
                 if (player.getAllGuesses().size()>0 && player.getHitCount() == 4) {
-                    System.out.println("Reached1");
                     for (Player losers : players) {
                         losers.reset();
                     }
-                    System.out.println("Reached2");
                     int maxDigit = 5;
                     boolean allowDuplicates = false;
                     int[] oldCode=this.code;
                     this.code=this.createCode(maxDigit, false);
-                    System.out.println("Reached3");
-
                     // Send everyone a win message
                     for (ClientHandler client : clients) {
                         client.getOutput().writeObject(new WinMessage(player.getPlayerName(), players, oldCode));
@@ -150,6 +136,7 @@ public class GameServer {
         return null;
     }
 
+    //Logic to determine hit and blow count
     private int[] guess(int[] currentGuess) {
         int hitCount = 0;
         int blowCount = 0;
@@ -165,18 +152,16 @@ public class GameServer {
         return new int[] { hitCount, blowCount };
     }
 
+    //Creates an array of unique ints
     private static boolean areDistinct(int[] arr) {
-        // Put all array elements in a HashSet
         Set<Integer> s = new HashSet<Integer>();
         for (int i : arr) {
             s.add(i);
         }
-
-        // If all elements are distinct, size of
-        // HashSet should be same array.
         return (s.size() == arr.length);
     }
 
+    //Randomizes an int[]'s values
     private static int[] randomizeCode(int maxDigit) {
         int[] code = new int[4];
         for (int i = 0; i < code.length; i++) {
@@ -186,6 +171,7 @@ public class GameServer {
 
     }
 
+    //Creates a new code based on the highest digit and if duplicates are allowed
     private int[] createCode(int maxDigit, boolean dups)
     {
         int [] code = GameServer.randomizeCode(maxDigit);
@@ -199,36 +185,34 @@ public class GameServer {
         GameServer gs = new GameServer();
     }
 
+    //A thread that handles a client connection
     private class ClientHandler implements Runnable {
         private final Socket clientSocket;
         private ObjectOutputStream output;
         private String playerName;
-        
+
         public ObjectOutputStream getOutput() {
             return output;
         }
 
-        // Constructor
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
         }
 
-        public void run() { // A player joins the game(I think)
-            // Creates inputs and outputs
+        public void run() {
             try {
-                this.output = new ObjectOutputStream(this.clientSocket.getOutputStream());// Only one of these should be
-                                                                                          // made
-                // // per player
-                ObjectInputStream input = new ObjectInputStream(this.clientSocket.getInputStream());// Only one of these should be
-                // made //
-                // per player
-
+                this.output = new ObjectOutputStream(this.clientSocket.getOutputStream());
+                ObjectInputStream input = new ObjectInputStream(this.clientSocket.getInputStream());
+                //runs indefinitely
                 while (true) {
+                    //Retrieves a message from the client. Determines what the message means and the next steps to take
+                    //WriteObject sends a message to the client side
                     Message msg = (Message) input.readObject();
                     if (msg instanceof JoinMessage) {
                         JoinMessage jm = (JoinMessage) msg;
                         boolean _isPlaying = jm.getIsPlaying();
                         boolean _playerExists = _isPlaying && playerExists(jm.getName());
+                        //Does appropriate action if a client is a spectator or not
                         if (_isPlaying && !_playerExists) {
                             state.addPlayer(jm.getName());
                             this.playerName = jm.getName();
@@ -252,12 +236,12 @@ public class GameServer {
                     // This hangs here until a message is sent
                 }
             } catch (SocketException e) {
+                //If a player leaves, remove them from the player list
                 System.out.println(this.playerName + " has left the game");
                 state.removePlayer(this.playerName);
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ClassNotFoundException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             } catch (Exception e) {
                 System.out.println("Connection reset error");

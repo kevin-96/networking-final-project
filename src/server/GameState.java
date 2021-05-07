@@ -1,3 +1,9 @@
+/*
+GameState
+Author:James Jacobson
+Holds all of the players, and their guesses. Knows if the game has started
+ */
+
 package server;
 
 import java.util.List;
@@ -22,9 +28,6 @@ public class GameState {
     public void removePlayer(String name)
     {
         synchronized (players) {
-            // Make a copy of players/playerNames to remove the player
-
-
             this.players.removeIf(player -> player.getPlayerName().equals(name));
         }
     }
