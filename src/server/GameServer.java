@@ -6,7 +6,10 @@ GameServer hosts a game of Hit and Blow. Send messages between itself and the co
 
 package server;
 
-import common.*;
+import common.datatypes.Guess;
+import common.datatypes.Player;
+import common.messages.*;
+import server.logic.GameState;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

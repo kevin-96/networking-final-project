@@ -4,9 +4,9 @@ Author:James Jacobson
 Message containing all of the players, the player who won, and the previous code
  */
 
-package common;
+package common.messages;
 
-import server.Player;
+import common.datatypes.Player;
 
 import java.util.List;
 

@@ -3,11 +3,11 @@ package client.gui;
 // import client.logic.TempPlayer;
 import client.logic.Settings;
 import client.network.Connection;
-import common.Message;
-import common.SendAllPlayersMessage;
-import common.WinMessage;
-import server.Guess;
-import server.Player;
+import common.messages.Message;
+import common.messages.SendAllPlayersMessage;
+import common.messages.WinMessage;
+import common.datatypes.Guess;
+import common.datatypes.Player;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

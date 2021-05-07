@@ -2,7 +2,7 @@
 ErrorMessage
 Author:James Jacobson
  */
-package common;
+package common.messages;
 
 public class ErrorMessage extends Message {
 

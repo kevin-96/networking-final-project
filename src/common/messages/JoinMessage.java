@@ -4,7 +4,7 @@ Author:James Jacobson
 Client joins server
  */
 
-package common;
+package common.messages;
 
 public class JoinMessage extends Message {
     String name;

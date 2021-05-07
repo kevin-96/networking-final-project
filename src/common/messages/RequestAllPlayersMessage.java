@@ -3,7 +3,7 @@ RequestAllPlayersMessage
 Author:James Jacobson
  */
 
-package common;
+package common.messages;
 
 public class RequestAllPlayersMessage extends Message {
 

@@ -3,7 +3,7 @@ Player class
 Author:James Jacobson
  */
 
-package server;
+package common.datatypes;
 
 import java.io.Serializable;
 import java.util.ArrayList;

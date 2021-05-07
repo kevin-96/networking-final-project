@@ -1,7 +1,7 @@
 package client;
 
 import java.util.ArrayList;
-import server.Player;
+import common.datatypes.Player;
 
 import client.gui.MainWindow;
 import client.logic.Settings;

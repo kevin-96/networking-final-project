@@ -4,7 +4,9 @@ Author:James Jacobson
 Holds all of the players, and their guesses. Knows if the game has started
  */
 
-package server;
+package server.logic;
+
+import common.datatypes.Player;
 
 import java.util.List;
 import java.util.Vector;

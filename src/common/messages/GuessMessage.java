@@ -1,4 +1,4 @@
-package common;
+package common.messages;
 /*
 GuessMessage
 Author:James Jacobson

@@ -7,10 +7,9 @@ package client.network;
  */
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.Socket;
 
-import common.*;
+import common.messages.*;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
