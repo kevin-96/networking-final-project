@@ -43,5 +43,5 @@ public class TempSettings implements Cloneable {
         return (TempSettings) super.clone();
     }
 
-    private static final TempSettings DEFAULT_SETTINGS = new TempSettings("Player", false, "localhost", 9000, false, 4, 9);
+    private static final TempSettings DEFAULT_SETTINGS = new TempSettings("Player", false, "localhost", 1234, false, 4, 9);
 }

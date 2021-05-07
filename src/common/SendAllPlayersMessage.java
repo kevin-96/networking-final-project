@@ -1,6 +1,6 @@
 package common;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import server.Player;
 
@@ -8,20 +8,20 @@ import server.Player;
 public class SendAllPlayersMessage extends Message {
 
     String message;
-    ArrayList<Player> allPlayers;
+    List<Player> allPlayers;
 
     public SendAllPlayersMessage(String message){
         super(message);
     }
 
 
-    public SendAllPlayersMessage(ArrayList<Player> allPlayers)
+    public SendAllPlayersMessage(List<Player> allPlayers)
     {
         super("All Players");//
         this.allPlayers=allPlayers;
     }
 
-    public ArrayList<Player> getAllPlayers()
+    public List<Player> getAllPlayers()
     {
         return this.allPlayers;
     }

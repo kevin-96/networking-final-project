@@ -1,6 +1,6 @@
 package common;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import server.Player;
 
@@ -8,7 +8,7 @@ import server.Player;
 public class JoinGameMessage extends Message {
 
     String message;
-    ArrayList<Player> allPlayers;
+    List<Player> allPlayers;
     boolean isStarted;
     
     public JoinGameMessage(String message){
@@ -16,14 +16,14 @@ public class JoinGameMessage extends Message {
     }
 
     
-    public JoinGameMessage(ArrayList<Player> allPlayers, boolean isStarted)
+    public JoinGameMessage(List<Player> allPlayers, boolean isStarted)
     {
         super(isStarted + "");//
         this.allPlayers = allPlayers;
         this.isStarted = isStarted;
     }
 
-    public ArrayList<Player> getAllPlayers()
+    public List<Player> getAllPlayers()
     {
         return this.allPlayers;
     }

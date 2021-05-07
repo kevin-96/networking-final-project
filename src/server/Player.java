@@ -29,6 +29,7 @@ public class Player implements Serializable {
         return this.blowCount;
     }
 
+
     public int[] getLatestGuess(){return this.latestGuess;}
 
 

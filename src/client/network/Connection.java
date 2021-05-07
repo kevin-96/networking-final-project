@@ -4,7 +4,7 @@ package client.network;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import common.*;
@@ -140,25 +140,19 @@ public class Connection implements Serializable {
         return null;
     }
 
-    public ArrayList<Player> getAllPlayers()
+    public Message getState()
     {
         try {
             // Occurs when the user first joins a games
             this.out.writeObject(new RequestAllPlayersMessage());// Hard coded true
             this.out.reset();
-            Object response = this.in.readObject();
-            if (response instanceof SendAllPlayersMessage) {
-                return ((SendAllPlayersMessage) response).getAllPlayers();
-            }
-            else
-            {
-                System.out.println("Error getting all players");
-                return null;
-            }
+            Message response = (Message) this.in.readObject();
+            return response;
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
+
 }
