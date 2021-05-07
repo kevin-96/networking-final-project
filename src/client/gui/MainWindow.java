@@ -8,6 +8,7 @@ import client.network.Connection;
 import common.Message;
 import common.SendAllPlayersMessage;
 import common.WinMessage;
+import server.Guess;
 import server.Player;
 
 import javax.swing.*;
@@ -117,54 +118,42 @@ public class MainWindow {
     public void processState(List<Player> players) {
         this.players = players;
 
-        Player currentPlayer=null;
+        Player currentPlayer = null;
         for (Player p : players) {
             if (p.getPlayerName().equals(this.playerName)) {
                 currentPlayer = p;
                 break;
             }
         }
-
-        DefaultTableModel guessModel = (DefaultTableModel) currentPlayerGuesses.getModel();
-
-        if (currentPlayer!=null) {
-            String lastRecordedGuessStr = (String) guessModel.getValueAt(guessModel.getRowCount() - 1, 0);
-
-            int[] lastRecordedGuess = new int[settings.codeLength];
-            for (int i = 0; i < codeLength; i++) {
-                lastRecordedGuess[i] = lastRecordedGuessStr.charAt(i) - '0';
-            }
-            int[] lastGuess = currentPlayer.getLatestGuess();
-            if (lastGuess!=null && !Arrays.equals(lastGuess, lastRecordedGuess)) {
-                StringBuilder newGuessStr = new StringBuilder();
-                for (int i : lastGuess) {
-                    newGuessStr.append(i);
-                }
-                guessModel.addRow(new Object[]{newGuessStr.toString(), String.valueOf(currentPlayer.getHitCount()), String.valueOf(currentPlayer.getBlowCount())});
-            }
-        } else if (guessModel != null) {
-            // Remove all rows other than the header
-            for (int i = guessModel.getRowCount() - 1; i > 0; i--) {
-                guessModel.removeRow(i);
-            }
+        if (currentPlayer == null) {
+            return;
         }
-        // guessModel.addRow(new Object[]{"Guess", "Hits", "Blows"});
-        // for (TempGuess guess : state.guesses) {
-        //     guessModel.addRow(new Object[]{guess.guess, String.valueOf(guess.hits), String.valueOf(guess.blows)});
-        // }
-        // this.currentPlayerGuesses.setModel(guessModel);
+
+        DefaultTableModel guessModel = new DefaultTableModel(0, 3);
+        guessModel.addRow(new Object[]{"Guess", "Hits", "Blows"});
+        for (Guess guess : currentPlayer.getAllGuesses()) {
+            guessModel.addRow(new Object[]{
+                Guess.convert(guess.digits),
+                String.valueOf(guess.hitCount),
+                String.valueOf(guess.blowCount)
+            });
+        }
+        this.currentPlayerGuesses.setModel(guessModel);
 
         // Player rows
         DefaultTableModel playersModel = new DefaultTableModel(0, 3);
         playersModel.addRow(new Object[]{"Player", "Hits", "Blows"});
         for (Player player : players) {
-            playersModel.addRow(new Object[]{player.getPlayerName(), String.valueOf(player.getHitCount()), String.valueOf(player.getBlowCount())});
+            playersModel.addRow(new Object[]{
+                player.getPlayerName(),
+                String.valueOf(player.getHitCount()),
+                String.valueOf(player.getBlowCount())
+            });
         }
         this.allPlayerHitCount.setModel(playersModel);
+
+        root.validate();
         root.repaint();
-        root.revalidate();
-
-
     }
 
     public void display() {

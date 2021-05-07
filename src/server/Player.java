@@ -1,43 +1,40 @@
 package server;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Player implements Serializable {
     
     private String playerName;
     // Latest hit and blows
-    private int hitCount;
-    private int blowCount;
-    private int[] latestGuess;
+    private List<Guess> allGuesses;
 
     public Player(String name)
     {
         this.playerName=name;
+        this.allGuesses=new ArrayList<Guess>();
     }
 
     public String getPlayerName(){
         return this.playerName;
     }
 
+
+    public List<Guess> getAllGuesses(){return this.allGuesses;}
+
     public int getHitCount()
     {
-        return this.hitCount;
+        return allGuesses.get(allGuesses.size()-1).hitCount;
     }
 
     public int getBlowCount()
     {
-        return this.blowCount;
+        return allGuesses.get(allGuesses.size()-1).blowCount;
     }
 
-
-    public int[] getLatestGuess(){return this.latestGuess;}
-
-
-
-    public void setHitAndBlows(int hits, int blows, int[] guess)
+    public void addGuess(Guess guess)
     {
-        this.hitCount = hits;
-        this.blowCount = blows;
-        this.latestGuess= guess;
+        this.allGuesses.add(guess);
     }
 }

@@ -94,7 +94,11 @@ public class GameServer {
                     int[] hab = guess(msg.getGuess());
                     System.out.println("H" + hab[0] + "B" + hab[1]);
                     synchronized (state) {
-                        player.setHitAndBlows(hab[0], hab[1], msg.getGuess());
+                        Guess guess=new Guess();
+                        guess.hitCount=hab[0];
+                        guess.blowCount=hab[1];
+                        guess.digits=msg.getGuess();
+                        player.addGuess(guess);
                     }
                 }
             }
@@ -134,7 +138,11 @@ public class GameServer {
             for (Player player : players) {
                 if (player.getHitCount() == 4) {
                     for (Player losers : players) {
-                        losers.setHitAndBlows(0, 0, new int[4]);
+                        Guess guess=new Guess();
+                        guess.hitCount=0;
+                        guess.blowCount=0;
+                        guess.digits=new int[4];
+                        losers.addGuess(guess);
                     }
                     int maxDigit = 5;
                     boolean allowDuplicates = false;
