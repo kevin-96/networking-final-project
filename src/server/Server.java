@@ -26,13 +26,13 @@ import java.util.*;
  * of the game and is essentially responsible for updating the game state.
  *************/
 
-public class GameServer {
+public class Server {
 
     private GameState state;
     private List<ClientHandler> clients; // A list of each thread. Contains the Object Output and Input stream of the socket
     private int[] code; // Code everyone is trying to guess
 
-    public GameServer() {
+    public Server() {
         state = new GameState();
         code = this.createCode(5, false); // Hard-code setting that all digits must be distinct
         clients = new Vector<>();
@@ -154,15 +154,6 @@ public class GameServer {
         return new int[]{hitCount, blowCount};
     }
 
-    //Creates an array of unique ints
-    private static boolean areDistinct(int[] arr) {
-        Set<Integer> s = new HashSet<Integer>();
-        for (int i : arr) {
-            s.add(i);
-        }
-        return (s.size() == arr.length);
-    }
-
     //Randomizes an int[]'s values
     private static int[] randomizeCode(int maxDigit) {
         int[] code = new int[4];
@@ -175,15 +166,16 @@ public class GameServer {
 
     //Creates a new code based on the highest digit and if duplicates are allowed
     private int[] createCode(int maxDigit, boolean dups) {
-        int[] code = GameServer.randomizeCode(maxDigit);
-        while (!areDistinct(code) && !dups) {
+        int[] code = Server.randomizeCode(maxDigit);
+        while (!Guess.digitsAreDistinct(code) && !dups) {
             code = randomizeCode(maxDigit);
         }
+        System.out.println("Code generated: " + Guess.convertToString(code));
         return code;
     }
 
     public static void main(String[] args) {
-        GameServer gs = new GameServer();
+        Server gs = new Server();
     }
 
     //A thread that handles a client connection

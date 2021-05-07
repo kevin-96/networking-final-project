@@ -80,9 +80,13 @@ public class MainWindow {
                             guess[i] = (Integer) input.getValue();
                         }
 
-                        System.out.println("Guessed " + Guess.convertToString(guess));
+                        if (Guess.digitsAreDistinct(guess)) {
+                            System.out.println("Guessed " + Guess.convertToString(guess));
+                            MainWindow.this.connection.guess(guess);
+                        } else {
+                            SimpleDialog.showErrorDialog("Guess digits must be distinct");
+                        }
 
-                        MainWindow.this.connection.guess(guess);
                     }
                 });
                 this.playerControls.add(submit);

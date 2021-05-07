@@ -1,6 +1,7 @@
 package common.datatypes;
 
 import java.io.Serializable;
+import java.util.HashSet;
 
 public class Guess implements Serializable {
     private int[] digits;
@@ -31,5 +32,13 @@ public class Guess implements Serializable {
 
     public int getBlowCount() {
         return blowCount;
+    }
+
+    public static boolean digitsAreDistinct(int[] digits) {
+        HashSet<Integer> digitSet = new HashSet<>();
+        for (int i : digits) {
+            digitSet.add(i);
+        }
+        return digitSet.size() == digits.length;
     }
 }
