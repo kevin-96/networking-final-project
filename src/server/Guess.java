@@ -15,11 +15,4 @@ public class Guess implements Serializable {
         return buf.toString();
     }
 
-    public static int[] convert(String guess) {
-        int[] ints = new int[guess.length()];
-        for (int i = 0; i < ints.length; i++) {
-            ints[i] = guess.charAt(i) - '0';
-        }
-        return ints;
-    }
 }

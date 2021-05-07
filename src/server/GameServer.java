@@ -114,25 +114,13 @@ public class GameServer {
         return false;
     }
 
-    private Message processClientJoinMessage(JoinMessage msg) {
+    private Message processClientJoinMessage() {
         return new JoinGameMessage(state.getAllPlayers(), state.didGameStart());
     }
 
-    private SettingsMessage processClientCreateGameMessage(CreateGameMessage msg) { // bool
-        // allowDuplicates=msg.allowDublicates // int maxDigit=msg.maxDigit
-        int maxDigit = 5;
-        boolean allowDuplicates = false;
-        this.code = GameServer.randomizeCode(maxDigit);
-        while (!areDistinct(code) && !allowDuplicates) {
-            randomizeCode(maxDigit);
-        }
-        this.state.startGame();
-        return new SettingsMessage(maxDigit, allowDuplicates);
-        // TODO: Create error of duplicate
 
-    }
 
-    private Message processRequestAllPlayers(RequestAllPlayersMessage msg) { // bool
+    private Message processRequestAllPlayers() { // bool
         try {
             List<Player> players = state.getAllPlayers();
             for (Player player : players) {
@@ -145,7 +133,7 @@ public class GameServer {
                     int maxDigit = 5;
                     boolean allowDuplicates = false;
                     int[] oldCode=this.code;
-                    this.code=this.createCode(maxDigit,allowDuplicates);
+                    this.code=this.createCode(maxDigit, false);
                     System.out.println("Reached3");
 
                     // Send everyone a win message
@@ -207,13 +195,12 @@ public class GameServer {
         return code;
     }
 
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         GameServer gs = new GameServer();
     }
 
     private class ClientHandler implements Runnable {
         private final Socket clientSocket;
-        private ObjectInputStream input;
         private ObjectOutputStream output;
         private String playerName;
         
@@ -232,8 +219,8 @@ public class GameServer {
                 this.output = new ObjectOutputStream(this.clientSocket.getOutputStream());// Only one of these should be
                                                                                           // made
                 // // per player
-                this.input = new ObjectInputStream(this.clientSocket.getInputStream());// Only one of these should be
-                                                                                       // made //
+                ObjectInputStream input = new ObjectInputStream(this.clientSocket.getInputStream());// Only one of these should be
+                // made //
                 // per player
 
                 while (true) {
@@ -248,21 +235,15 @@ public class GameServer {
                         } else {
                             this.playerName = null;
                         }
-                        Message toSend = _playerExists ? new ErrorMessage("Player already exists") : processClientJoinMessage(jm);
+                        Message toSend = _playerExists ? new ErrorMessage("Player already exists") : processClientJoinMessage();
                         this.output.writeObject(toSend);
                         this.output.flush();
                     } else if (msg instanceof GuessMessage) {
                         processClientGuessMessage((GuessMessage) msg);
                         this.output.reset();
-                    } else if (msg instanceof CreateGameMessage) {
-                        CreateGameMessage cm = (CreateGameMessage) msg;
-                        SettingsMessage toSend = processClientCreateGameMessage(cm);
-                        this.output.writeObject(toSend);
-                        this.output.reset();
-                        GameServer.this.processClientCreateGameMessage((CreateGameMessage) msg);
                     } else if (msg instanceof RequestAllPlayersMessage) {
                         RequestAllPlayersMessage req = (RequestAllPlayersMessage) msg;
-                        Message all = processRequestAllPlayers(req);
+                        Message all = processRequestAllPlayers();
                         if (all != null) {
                             this.output.writeObject(all);
                             this.output.reset();

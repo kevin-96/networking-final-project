@@ -6,7 +6,7 @@ package client.logic;
  *  Will eventually be replaced with a new class that is shared between the client and server.
  */
 
-@Deprecated
+
 public class TempSettings implements Cloneable {
 
     // Client Settings

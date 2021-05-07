@@ -1,7 +1,6 @@
 package client.gui;
 
 import client.logic.TempSettings;
-import client.network.Connection;
 
 import javax.swing.*;
 import java.awt.event.*;

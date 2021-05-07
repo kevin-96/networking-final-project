@@ -2,13 +2,8 @@ package common;
 
 public class GuessMessage extends Message {
 
-    String message;
     String name;
     int[] guess;
-    
-    public GuessMessage(String message){
-        super(message);
-    }
 
     public GuessMessage(String name, int[] guess)
     {

@@ -1,9 +1,7 @@
 package client.gui;
 
-import client.logic.TempGuess;
 // import client.logic.TempPlayer;
 import client.logic.TempSettings;
-import client.logic.TempState;
 import client.network.Connection;
 import common.Message;
 import common.SendAllPlayersMessage;
@@ -16,9 +14,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
+        import java.util.List;
 
 public class MainWindow {
     private static final int REFRESH_RATE = 1000;
@@ -32,16 +28,11 @@ public class MainWindow {
 
     private JFrame parent;
     private int codeLength;
-    private int maxDigit;
     private String playerName;
 
     private TempSettings settings;
     // private TempState state;
     private Connection connection;
-    private List<Player> players;// State
-
-    private boolean isDisplayingWinDialog;
-    private Timer timer;
 
     public TempSettings getSettings() {
         try {
@@ -59,7 +50,7 @@ public class MainWindow {
         this.settings = settings;
         this.playerName = settings.playerName;
         this.codeLength = settings.codeLength;
-        this.maxDigit = settings.maxDigit;
+        int maxDigit = settings.maxDigit;
 
         // Update GUI
         try {
@@ -117,7 +108,7 @@ public class MainWindow {
 
     public void processState(List<Player> players) {
 
-        this.players = players;
+        // State
 
         Player currentPlayer = null;
         for (Player p : players) {
@@ -185,7 +176,7 @@ public class MainWindow {
         });
 
         // Refresh game state every {REFRESH_RATE} milliseconds
-        timer = new Timer(REFRESH_RATE, new ActionListener() {
+        Timer timer = new Timer(REFRESH_RATE, new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 MainWindow.this.updateState();
             }
@@ -208,10 +199,6 @@ public class MainWindow {
 
     public void setConnection(String server, int port, String name, boolean isSpectator) throws Exception {
         this.connection = new Connection(server, port, name, isSpectator);
-    }
-
-    public Connection getConnection() {
-        return this.connection;
     }
 
     private void updateState() {
@@ -239,12 +226,12 @@ public class MainWindow {
         }
     }
 
-    public String intArrayToString(int arr[]) {
-        String str = "";
+    public String intArrayToString(int[] arr) {
+        StringBuilder str = new StringBuilder();
         for (int i = 0; i < arr.length; i++) {
-            str += Integer.toString(arr[i]);
+            str.append(Integer.toString(arr[i]));
         }
-        return str;
+        return str.toString();
     }
 
 }
