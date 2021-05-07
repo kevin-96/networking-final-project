@@ -1,6 +1,7 @@
 package client.gui;
 
 import client.logic.TempSettings;
+import client.network.Connection;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -12,6 +13,7 @@ public class ConnectionDialog extends JDialog {
     private JTextField serverAddressField;
     private JTextField portField;
     private JCheckBox spectatorToggle;
+    private JTextField nameField;
 
     private MainWindow window;
 
@@ -79,6 +81,7 @@ public class ConnectionDialog extends JDialog {
         TempSettings settings = window.getSettings();
         serverAddressField.setText(settings.serverAddress);
         portField.setText(String.valueOf(settings.port));
+        nameField.setText(settings.playerName);
         spectatorToggle.setSelected(settings.isSpectator);
     }
 
@@ -86,8 +89,10 @@ public class ConnectionDialog extends JDialog {
         String server = serverAddressField.getText();
         int port = Integer.parseInt(portField.getText());
         boolean spectator = spectatorToggle.isSelected();
+        String playerName= nameField.getText();
 
         // TODO try to connect
+        window.setConnection(server,port, playerName);
         boolean isConnected = true;
 
         TempSettings settings = window.getSettings();
@@ -95,6 +100,7 @@ public class ConnectionDialog extends JDialog {
         settings.port = port;
         settings.isSpectator = spectator;
         settings.isConnected = isConnected;
+        settings.playerName = playerName;
         window.processSettings(settings);
 
         if (isConnected) {

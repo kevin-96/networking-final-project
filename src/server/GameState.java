@@ -17,7 +17,7 @@ public class GameState {
     private ArrayList<String> playerNames; // Players in a game
     // private ArrayList<Game> games;
     private Integer[] code;// What the players are trying to guess
-    private boolean gameStarted=false;
+    private boolean gameStarted=true;
 
     public GameState() {
         this.players = new ArrayList<Player>();

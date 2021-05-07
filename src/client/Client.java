@@ -1,8 +1,10 @@
 package client;
 
+import java.util.ArrayList;
+import server.Player;
+
 import client.gui.MainWindow;
 import client.logic.TempSettings;
-import client.logic.TempState;
 
 /**
  * The top-level gui component of the application
@@ -17,10 +19,10 @@ public class Client {
         window = new MainWindow();
         window.display();
         window.processSettings(TempSettings.getDefaultSettings());
-        window.processState(TempState.getDefaultState());
+        window.processState(new ArrayList<Player>());
     }
 
-    public static void main(String[] args) {
+    public static void main(String args[]) {
         new Client();
     }
 }

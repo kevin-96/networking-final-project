@@ -13,12 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import client.network.Connection;
-import common.CreateGameMessage;
-import common.GuessMessage;
-import common.JoinGameMessage;
-import common.JoinMessage;
-import common.Message;
-import common.SettingsMessage;
+import common.*;
 
 /**************
  * GameServer class Authors: Phillip Nam, James Jacobson, Ryan Clark Spring 2021
@@ -36,6 +31,7 @@ public class GameServer {
     private ArrayList<Socket> sockets;
     private ArrayList<ObjectOutputStream> outputs;
     private ArrayList<ObjectInputStream> inputs;
+    private ArrayList<Connection> connections;
     private int[] code;
 
     public GameServer() {
@@ -43,6 +39,7 @@ public class GameServer {
         sockets = new ArrayList<Socket>();
         outputs = new ArrayList<ObjectOutputStream>();
         inputs = new ArrayList<ObjectInputStream>();
+        connections = new ArrayList<Connection>();
         code=new int[]{1,2,3,4};//Hard coded for now
         ServerSocket server = null;
         System.out.println("Server is active");
@@ -96,30 +93,22 @@ public class GameServer {
     private void processClientGuessMessage(GuessMessage msg) {
         // Find the sender's player object and update its hit and blow count
         try {
-            ArrayList<Player> players = state.getAllPlayers();
-            Player currPlayer = null;
-            for (Player player : players) {
+            for (Player player : state.getAllPlayers()) {
                 if (player.getPlayerName().equals(msg.getName())) {
                     int[] hab = guess(msg.getGuess());
-                    System.out.println("H"+hab[0]+"B"+hab[1]);
-                    player.setHitAndBlows(hab[0], hab[1]);
-                    currPlayer = player;
+                    System.out.println("H" + hab[0] + "B" + hab[1]);
+                    player.setHitAndBlows(hab[0], hab[1], msg.getGuess());
                 }
             }
-            // Print again
-            System.out.printf("Hits: %d; Blows: %d\n", currPlayer.getHitCount(), currPlayer.getBlowCount());
-
-            for (ObjectOutputStream output : outputs) {
-                output.writeObject(currPlayer);
-                output.reset();
-            }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private Message processClientJoinMessage(JoinMessage msg) {
         try {
+            //this.connections.add(msg.getConnection());
             return new JoinGameMessage(state.getAllPlayers(), state.didGameStart());
         } catch (Exception e) {
             e.printStackTrace();
@@ -140,6 +129,16 @@ public class GameServer {
         return new SettingsMessage(maxDigit, allowDuplicates);
         // TODO: Create error of duplicate
 
+    }
+
+    private SendAllPlayersMessage processRequestAllPlayers(RequestAllPlayersMessage msg) { // bool
+        try {
+            //this.connections.add(msg.getConnection());
+            return new SendAllPlayersMessage(state.getAllPlayers());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private int[] guess(int[] currentGuess) {
@@ -236,6 +235,15 @@ public class GameServer {
                         output.writeObject(toSend);
                         output.reset();
                         GameServer.this.processClientCreateGameMessage((CreateGameMessage) msg);
+                    }
+                    else if(msg instanceof RequestAllPlayersMessage)
+                    {
+                        System.out.println("RequestAllPlayers received");
+                        RequestAllPlayersMessage req = (RequestAllPlayersMessage) msg;
+                        SendAllPlayersMessage all=processRequestAllPlayers(req);
+                        output.writeObject(all);
+                        System.out.println("SendAllPlayers sent");
+                        output.reset();
                     }
                     // This hangs here until a message is sent
                 }

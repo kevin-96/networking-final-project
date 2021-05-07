@@ -1,26 +1,27 @@
 package client.network;
 
-import java.io.BufferedReader;
-import java.io.PrintWriter;
+
+import java.io.IOException;
+import java.io.Serializable;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
-import common.GuessMessage;
-import common.JoinMessage;
-import common.Message;
+import common.*;
+import server.GameServer;
 import server.Player;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-public class Connection {
-    private String hostname;
-    private String name;
-    private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
-    private int port;
-    private boolean socketExists;
+public class Connection implements Serializable {
+    private transient final String hostname;
+    private transient final String name;
+    private transient Socket socket;
+    private transient final int port;
+    public boolean socketExists=false;
+    private ObjectInputStream in;
+    private transient ObjectOutputStream out;
 
     public static void main(String[] args) {
         new Connection("127.0.0.1", 1234, "Message");
@@ -30,7 +31,6 @@ public class Connection {
         this.hostname = hostname;
         this.port = port;
         this.name = name;
-
         try {
             establishConnection();
         } catch (Exception e) {
@@ -45,50 +45,120 @@ public class Connection {
         // Used to check if connection exists by other functions
         System.out.println(
                 "Connected. Communicating from port " + socket.getLocalPort() + " to port " + socket.getPort() + ".");
+        this.out = new ObjectOutputStream(socket.getOutputStream());
+        this.in = new ObjectInputStream(socket.getInputStream());
+        this.socketExists=true;
 
-        inGame();
+        // This thread will handle the client
+        // separately
+        joinGame();
+        //Needs a parameter that see if it is a spectator or not
+    }
+
+    public void guess(int[] guess) {
+
+        try {
+            this.out.writeObject(new GuessMessage(this.name, guess));
+            this.out.reset();
+            //expectGuess();
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+
 
     }
 
-    public void inGame() {
-        Scanner s = new Scanner(System.in);
-        String tempName = s.nextLine();
-
+    public Player expectGuess(){
         try {
-            // Occurs when the user first joins a game
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
-            out.writeObject(new JoinMessage(tempName));
-            out.reset();
-            while (true) {// I think this needs a while loop as well cause it needs to wait for a server
-                          // response but I could be wrong
-                // Removing this line causes the server to crash
-                Object response = input.readObject();// DEBUG
-                if(response instanceof Message)
-                {
-                    Message m = (Message) response;
-                    System.out.println(m.getMessage());
-                }
-                if(response instanceof Player)
-                {
-                    Player p = (Player) response;
-                    System.out.println("Player: " + p.getPlayerName() + " Hits = " + p.getHitCount() + " Blows = " + p.getBlowCount());
-                }
-                
-                String line = s.nextLine();
-                int[] guess = new int[4];
-                for(int i = 0; i < guess.length; i++) {
-                    guess[i] = line.charAt(i) - '0';
-                }
-                out.writeObject(new GuessMessage(tempName, guess));
-                out.reset();
-                
-                // System.out.println(response.getMessage());//DEBUG
+            System.out.println(this.name);
+            Object response = this.in.readObject();
 
+            if (response instanceof Player) {
+                Player p=(Player) response;
+                return p;
             }
+
+            else
+            {
+                System.out.println("Error Joining game");
+                return null;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+
+    public SettingsMessage createGame()
+    {
+        try {
+            // Occurs when the user first joins a games
+            this.out.writeObject(new CreateGameMessage(this.name));
+            this.out.reset();
+            Object response = this.in.readObject();
+            if (response instanceof SettingsMessage) {
+                SettingsMessage sm=(SettingsMessage) response;
+                return sm;
+            }
+            else
+            {
+                System.out.println("Error Creating game");
+                return null;
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
+    public JoinGameMessage joinGame() {
+
+        try {
+            // Occurs when the user first joins a games
+            this.out.writeObject(new JoinMessage(this.name,true));// Hard coded true
+            this.out.reset();
+            Object response = this.in.readObject();
+            if (response instanceof JoinGameMessage) {
+                JoinGameMessage jgm=(JoinGameMessage) response;
+                System.out.println(jgm.getMessage());
+                return jgm;
+            }
+            else
+            {
+                System.out.println("Error Joining game");
+                return null;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public ArrayList<Player> getAllPlayers()
+    {
+        try {
+            // Occurs when the user first joins a games
+            this.out.writeObject(new RequestAllPlayersMessage());// Hard coded true
+            this.out.reset();
+            Object response = this.in.readObject();
+            if (response instanceof SendAllPlayersMessage) {
+                return ((SendAllPlayersMessage) response).getAllPlayers();
+            }
+            else
+            {
+                System.out.println("Error getting all players");
+                return null;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

@@ -8,6 +8,7 @@ public class Player implements Serializable {
     // Latest hit and blows
     private int hitCount;
     private int blowCount;
+    private int[] latestGuess;
 
     public Player(String name)
     {
@@ -28,9 +29,14 @@ public class Player implements Serializable {
         return this.blowCount;
     }
 
-    public void setHitAndBlows(int hits, int blows)
+    public int[] getLatestGuess(){return this.latestGuess;}
+
+
+
+    public void setHitAndBlows(int hits, int blows, int[] guess)
     {
         this.hitCount = hits;
         this.blowCount = blows;
+        this.latestGuess= guess;
     }
 }

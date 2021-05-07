@@ -1,17 +1,22 @@
 package client.gui;
 
 import client.logic.TempGuess;
-import client.logic.TempPlayer;
+// import client.logic.TempPlayer;
 import client.logic.TempSettings;
 import client.logic.TempState;
+import client.network.Connection;
+import server.Player;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainWindow {
+    private static final int REFRESH_RATE = 1000;
     private JPanel root;
     private JLabel connectionInfoText;
     private JButton connectionSettingsButton;
@@ -26,7 +31,9 @@ public class MainWindow {
     private String playerName;
 
     private TempSettings settings;
-    private TempState state;
+    // private TempState state;
+    private Connection connection;
+    private ArrayList<Player> players;//State
 
     public TempSettings getSettings() {
         try {
@@ -77,14 +84,23 @@ public class MainWindow {
                             JSpinner input = (JSpinner) MainWindow.this.playerControls.getComponents()[i];
                             guessDigits.append(input.getValue());
                         }
+                        String[] guessToString=guessDigits.toString().split("");
+                        int[] guess= new int[4];
+                        for(int i=0;i<guess.length;i++) {
+                            guess[i] = Integer.valueOf(guessToString[i]);
+                        }
+                        MainWindow.this.connection.guess(guess);
 
                         // TODO send guess to server -- below is a placeholder that makes up a fake response
+                        /*
                         TempGuess guess = new TempGuess();
                         guess.guess = guessDigits.toString();
                         guess.blows = (int) (Math.random() * 1000) % settings.codeLength;
                         guess.hits = (int) (Math.random() * 1000) % settings.codeLength;
                         state.guesses.add(guess);
                         processState(state);
+                        */
+
                     }
                 });
                 this.playerControls.add(submit);
@@ -102,26 +118,45 @@ public class MainWindow {
         }
     }
 
-    public TempState getState() {
-        return state;
-    }
+    public void processState(ArrayList<Player> players) {
+        this.players = players;
 
-    public void processState(TempState state) {
-        this.state = state;
-
-        // Guess rows
-        DefaultTableModel guessModel = new DefaultTableModel(0, 3);
-        guessModel.addRow(new Object[]{"Guess", "Hits", "Blows"});
-        for (TempGuess guess : state.guesses) {
-            guessModel.addRow(new Object[]{guess.guess, String.valueOf(guess.hits), String.valueOf(guess.blows)});
+        Player currentPlayer=null;
+        for (Player p : players) {
+            if (p.getPlayerName().equals(this.playerName)) {
+                currentPlayer = p;
+                break;
+            }
         }
-        this.currentPlayerGuesses.setModel(guessModel);
+
+        if(currentPlayer!=null) {
+            DefaultTableModel guessModel = (DefaultTableModel) currentPlayerGuesses.getModel();
+            String lastRecordedGuessStr = (String) guessModel.getValueAt(guessModel.getRowCount() - 1, 0);
+
+            int[] lastRecordedGuess = new int[settings.codeLength];
+            for (int i = 0; i < codeLength; i++) {
+                lastRecordedGuess[i] = lastRecordedGuessStr.charAt(i) - '0';
+            }
+            int[] lastGuess = currentPlayer.getLatestGuess();
+            if (lastGuess!=null && !Arrays.equals(lastGuess, lastRecordedGuess)) {
+                StringBuilder newGuessStr = new StringBuilder();
+                for (int i : lastGuess) {
+                    newGuessStr.append(i);
+                }
+                guessModel.addRow(new Object[]{newGuessStr.toString(), String.valueOf(currentPlayer.getHitCount()), String.valueOf(currentPlayer.getBlowCount())});
+            }
+        }
+        // guessModel.addRow(new Object[]{"Guess", "Hits", "Blows"});
+        // for (TempGuess guess : state.guesses) {
+        //     guessModel.addRow(new Object[]{guess.guess, String.valueOf(guess.hits), String.valueOf(guess.blows)});
+        // }
+        // this.currentPlayerGuesses.setModel(guessModel);
 
         // Player rows
         DefaultTableModel playersModel = new DefaultTableModel(0, 3);
         playersModel.addRow(new Object[]{"Player", "Hits", "Blows"});
-        for (TempPlayer player : state.gameState) {
-            playersModel.addRow(new Object[]{player.name, String.valueOf(player.hits), String.valueOf(player.blows)});
+        for (Player player : players) {
+            playersModel.addRow(new Object[]{player.getPlayerName(), String.valueOf(player.getHitCount()), String.valueOf(player.getBlowCount())});
         }
         this.allPlayerHitCount.setModel(playersModel);
     }
@@ -137,6 +172,7 @@ public class MainWindow {
     }
 
     public MainWindow() {
+
         connectionSettingsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -144,6 +180,15 @@ public class MainWindow {
             }
         });
 
+        // Refresh game state every {REFRESH_RATE} milliseconds
+        ActionListener taskPerformer = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                MainWindow.this.updateState();
+            }
+        };
+        new Timer(REFRESH_RATE, taskPerformer).start();
+        
+        
         this.playerControls.setLayout(new FlowLayout());
 
         String[] guessColumns = new String[]{"Guess", "Hits", "Blows"};
@@ -156,5 +201,22 @@ public class MainWindow {
         playersModel.addRow(playerColumns);
         allPlayerHitCount.setModel(playersModel);
     }
+
+    public void setConnection(String server, int port, String name) {
+        this.connection=new Connection(server,port,name);
+    }
+    public Connection getConnection()
+    {
+        return this.connection;
+    }
+
+    private void updateState() {
+        if(this.connection!=null)
+        {
+        this.players = this.connection.getAllPlayers();
+        processState(this.players);
+        }
+    }
+
 
 }
