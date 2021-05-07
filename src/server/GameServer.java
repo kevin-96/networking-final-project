@@ -1,14 +1,9 @@
 package server;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.*;
-
-import client.network.Connection;
 import common.*;
 
 /**************
@@ -38,6 +33,7 @@ public class GameServer {
         Scanner scan= new Scanner(System.in);
         int port=scan.nextInt();
         System.out.println("Server is active on port " + port);
+        scan.close();
         try {
 
             // GuessMessage
@@ -151,7 +147,12 @@ public class GameServer {
                     int[] oldCode=this.code;
                     this.code=this.createCode(maxDigit,allowDuplicates);
                     System.out.println("Reached3");
-                    return new WinMessage(player.getPlayerName(), players, oldCode);
+
+                    // Send everyone a win message
+                    for (ClientHandler client : clients) {
+                        client.getOutput().writeObject(new WinMessage(player.getPlayerName(), players, oldCode));
+                    }
+                    return null;
                 }
             }
             return new SendAllPlayersMessage(state.getAllPlayers());
@@ -174,18 +175,6 @@ public class GameServer {
             }
         }
         return new int[] { hitCount, blowCount };
-    }
-
-    private boolean validateGuess(String guess) {
-        if (guess.length() == 4) {
-            for (int i = 0; i < guess.length(); i++) {
-                if (!(guess.charAt(i) >= 48 && guess.charAt(i) <= 53)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
     }
 
     private static boolean areDistinct(int[] arr) {
@@ -227,21 +216,9 @@ public class GameServer {
         private ObjectInputStream input;
         private ObjectOutputStream output;
         private String playerName;
-
-        public ObjectInputStream getInput() {
-            return input;
-        }
-
+        
         public ObjectOutputStream getOutput() {
             return output;
-        }
-
-        public boolean getIsConnected() {
-            return clientSocket.isConnected();
-        }
-
-        public String getPlayerName() {
-            return this.playerName;
         }
 
         // Constructor
@@ -286,8 +263,10 @@ public class GameServer {
                     } else if (msg instanceof RequestAllPlayersMessage) {
                         RequestAllPlayersMessage req = (RequestAllPlayersMessage) msg;
                         Message all = processRequestAllPlayers(req);
-                        this.output.writeObject(all);
-                        this.output.reset();
+                        if (all != null) {
+                            this.output.writeObject(all);
+                            this.output.reset();
+                        }
                     }
                     // This hangs here until a message is sent
                 }

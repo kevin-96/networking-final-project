@@ -116,7 +116,7 @@ public class MainWindow {
     }
 
     public void processState(List<Player> players) {
-        System.out.println("Reached3");
+
         this.players = players;
 
         Player currentPlayer = null;
@@ -126,36 +126,35 @@ public class MainWindow {
                 break;
             }
         }
-        if (currentPlayer == null) {
-            return;
-        }
-        System.out.println("Reached4");
 
-        DefaultTableModel guessModel = new DefaultTableModel(0, 3);
-        System.out.println("Reached5");
-        guessModel.addRow(new Object[] { "Guess", "Hits", "Blows" });
-        System.out.println("Reached6");
-        for (Guess guess : currentPlayer.getAllGuesses()) {
-            guessModel.addRow(new Object[] { Guess.convert(guess.digits), String.valueOf(guess.hitCount),
-                    String.valueOf(guess.blowCount) });
+        // Only update guesses if the player is not a spectator (in which case they aren't in the players list)
+        if (currentPlayer != null) {
+            DefaultTableModel guessModel = new DefaultTableModel(0, 3);
+
+            guessModel.addRow(new Object[] { "Guess", "Hits", "Blows" });
+
+            for (Guess guess : currentPlayer.getAllGuesses()) {
+                guessModel.addRow(new Object[] { Guess.convert(guess.digits), String.valueOf(guess.hitCount),
+                        String.valueOf(guess.blowCount) });
+            }
+
+            this.currentPlayerGuesses.setModel(guessModel);
+            this.currentPlayerGuesses.revalidate();
+            this.currentPlayerGuesses.repaint();
         }
-        System.out.println("Reached7");
-        this.currentPlayerGuesses.setModel(guessModel);
-        this.currentPlayerGuesses.revalidate();
-        this.currentPlayerGuesses.repaint();
-        System.out.println("Reached8");
+
         // Player rows
         DefaultTableModel playersModel = new DefaultTableModel(0, 3);
-        System.out.println("Reached9");
+
         playersModel.addRow(new Object[] { "Player", "Hits", "Blows" });
-        System.out.println("Reached10");
+
         for (Player player : players) {
             playersModel.addRow(new Object[] { player.getPlayerName(), String.valueOf(player.getHitCount()),
                     String.valueOf(player.getBlowCount()) });
         }
-        System.out.println("Reached11");
+
         this.allPlayerHitCount.setModel(playersModel);
-        System.out.println("Reached12");
+
 
         parent.revalidate();
         parent.repaint();
@@ -163,7 +162,7 @@ public class MainWindow {
         root.revalidate();
         root.repaint();
 
-        System.out.println("Reached13");
+
     }
 
     public void display() {
@@ -224,13 +223,15 @@ public class MainWindow {
             } else if (state instanceof WinMessage) {
 
                 // Clear out guesses by sending an empty state
-                System.out.println("Reached1");
+
 
                 // isDisplayingWinDialog = true;
+                
                 WinMessage winner = (WinMessage) state;
+                System.out.println(winner.getName() + " Has Won");
                 String winText = winner.getName() + " broke the code! Code: " + intArrayToString(winner.getCode());
                 JOptionPane.showMessageDialog(null, winText, "Game Over!", JOptionPane.PLAIN_MESSAGE);
-                System.out.println("Reached2");
+
                 processState(((WinMessage) state).getAllPlayers());
             }
 
