@@ -28,15 +28,17 @@ public class Connection implements Serializable {
     public boolean socketExists=false;
     private ObjectInputStream in;
     private transient ObjectOutputStream out;
+    private boolean isPlaying;
 
     public static void main(String[] args) throws Exception {
-        new Connection("127.0.0.1", 1234, "Message");
+        new Connection("127.0.0.1", 1234, "Message", false);
     }
 
-    public Connection(String hostname, int port, String name) throws Exception {
+    public Connection(String hostname, int port, String name, boolean isSpectator) throws Exception {
         this.hostname = hostname;
         this.port = port;
         this.name = name;
+        this.isPlaying = !isSpectator;
         establishConnection();
     }
 
@@ -119,7 +121,7 @@ public class Connection implements Serializable {
 
     public void joinGame() throws Exception {
         // Occurs when the user first joins a games
-        this.out.writeObject(new JoinMessage(this.name,true));// Hard coded true
+        this.out.writeObject(new JoinMessage(this.name, isPlaying));
         this.out.reset();
         Object response = this.in.readObject();
         if (response instanceof JoinGameMessage) {

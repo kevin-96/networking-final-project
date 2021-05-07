@@ -96,7 +96,7 @@ public class ConnectionDialog extends JDialog {
         boolean isConnected = true;
 
         try{
-            window.setConnection(server,port, playerName);
+            window.setConnection(server, port, playerName, spectator);
         } catch (Exception e) {
             isConnected = false;
             JOptionPane.showMessageDialog(null, "Connection failed: " + e.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);

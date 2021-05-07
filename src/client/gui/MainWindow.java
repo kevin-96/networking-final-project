@@ -207,8 +207,8 @@ public class MainWindow {
         timer.start();
     }
 
-    public void setConnection(String server, int port, String name) throws Exception {
-        this.connection = new Connection(server, port, name);
+    public void setConnection(String server, int port, String name, boolean isSpectator) throws Exception {
+        this.connection = new Connection(server, port, name, isSpectator);
     }
 
     public Connection getConnection() {

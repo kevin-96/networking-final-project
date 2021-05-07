@@ -263,8 +263,9 @@ public class GameServer {
                     Message msg = (Message) input.readObject();
                     if (msg instanceof JoinMessage) {
                         JoinMessage jm = (JoinMessage) msg;
-                        boolean _playerExists = playerExists(jm.getName());
-                        if (!_playerExists && jm.getIsPlaying()) {
+                        boolean _isPlaying = jm.getIsPlaying();
+                        boolean _playerExists = _isPlaying && playerExists(jm.getName());
+                        if (_isPlaying && !_playerExists) {
                             state.addPlayer(jm.getName());
                             this.playerName = jm.getName();
                         } else {
