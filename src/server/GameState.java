@@ -37,15 +37,9 @@ public class GameState {
     {
         synchronized (players) {
             // Make a copy of players/playerNames to remove the player
-            List<Player> filteredPlayers = new Vector(players);
-            
-            for (Player player : filteredPlayers) {
-                if (player.getPlayerName().equals(name)) {
-                    filteredPlayers.remove(player);
-                }
-            }
 
-            this.players = filteredPlayers;
+
+            this.players.removeIf(player -> player.getPlayerName().equals(name));
         }
     }
 

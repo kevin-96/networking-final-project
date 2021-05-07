@@ -6,13 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 import client.network.Connection;
 import common.*;
@@ -36,15 +30,20 @@ public class GameServer {
 
     public GameServer() {
         state = new GameState();
-        code = new int[] { 1, 2, 3, 4 };// Hard coded for now
+        //code = this.createCode(5,false);
+        code = new int[]{1,2,3,4};//DEBUG
         clients = new Vector<ClientHandler>();
         ServerSocket server = null;
-        System.out.println("Server is active");
+        System.out.println("Enter port number");
+        Scanner scan= new Scanner(System.in);
+        int port=scan.nextInt();
+        System.out.println("Server is active on port " + port);
         try {
+
             // GuessMessage
             //
             // server is listening on port 1234
-            server = new ServerSocket(1234);
+            server = new ServerSocket(port);
             server.setReuseAddress(true);
 
             // running infinite loop for getting
@@ -136,21 +135,18 @@ public class GameServer {
         try {
             List<Player> players = state.getAllPlayers();
             for (Player player : players) {
-                if (player.getHitCount() == 4) {
+                if (player.getAllGuesses().size()>0 && player.getHitCount() == 4) {
+                    System.out.println("Reached1");
                     for (Player losers : players) {
-                        Guess guess=new Guess();
-                        guess.hitCount=0;
-                        guess.blowCount=0;
-                        guess.digits=new int[4];
-                        losers.addGuess(guess);
+                        losers.reset();
                     }
+                    System.out.println("Reached2");
                     int maxDigit = 5;
                     boolean allowDuplicates = false;
-                    this.code = GameServer.randomizeCode(maxDigit);
-                    while (!areDistinct(code) && !allowDuplicates) {
-                        randomizeCode(maxDigit);
-                    }
-                    return new WinMessage(player.getPlayerName(), this.code);
+                    int[] oldCode=this.code;
+                    this.code=this.createCode(maxDigit,allowDuplicates);
+                    System.out.println("Reached3");
+                    return new WinMessage(player.getPlayerName(), players, oldCode);
                 }
             }
             return new SendAllPlayersMessage(state.getAllPlayers());
@@ -208,6 +204,15 @@ public class GameServer {
 
     }
 
+    private int[] createCode(int maxDigit, boolean dups)
+    {
+        int [] code = GameServer.randomizeCode(maxDigit);
+        while (!areDistinct(code) && !dups) {
+            code = randomizeCode(maxDigit);
+        }
+        return code;
+    }
+
     public static void main(String args[]) {
         GameServer gs = new GameServer();
     }
@@ -263,6 +268,7 @@ public class GameServer {
 
                     } else if (msg instanceof GuessMessage) {
                         processClientGuessMessage((GuessMessage) msg);
+                        this.output.reset();
                     } else if (msg instanceof CreateGameMessage) {
                         CreateGameMessage cm = (CreateGameMessage) msg;
                         SettingsMessage toSend = processClientCreateGameMessage(cm);
@@ -278,6 +284,7 @@ public class GameServer {
                     // This hangs here until a message is sent
                 }
             } catch (SocketException e) {
+                System.out.println(this.playerName + " has left the game");
                 state.removePlayer(this.playerName);
             } catch (IOException e) {
                 e.printStackTrace();

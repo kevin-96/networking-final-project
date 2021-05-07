@@ -1,5 +1,10 @@
 package client.network;
 
+/**
+ * Connection handling
+ *
+ * @author Brian Carballo, Kevin Sangurima
+ */
 
 import java.io.IOException;
 import java.io.Serializable;

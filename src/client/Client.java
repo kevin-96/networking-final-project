@@ -20,6 +20,7 @@ public class Client {
         window.display();
         window.processSettings(TempSettings.getDefaultSettings());
         window.processState(new ArrayList<Player>());
+
     }
 
     public static void main(String args[]) {

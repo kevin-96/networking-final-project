@@ -25,16 +25,33 @@ public class Player implements Serializable {
 
     public int getHitCount()
     {
-        return allGuesses.get(allGuesses.size()-1).hitCount;
+        if(allGuesses.size()>0) {
+            return allGuesses.get(allGuesses.size() - 1).hitCount;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     public int getBlowCount()
     {
-        return allGuesses.get(allGuesses.size()-1).blowCount;
+        if(allGuesses.size()>0) {
+            return allGuesses.get(allGuesses.size() - 1).blowCount;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     public void addGuess(Guess guess)
     {
         this.allGuesses.add(guess);
+    }
+
+    public void reset()
+    {
+        this.allGuesses = new ArrayList<Guess>() ;
     }
 }

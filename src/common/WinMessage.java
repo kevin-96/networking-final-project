@@ -2,14 +2,18 @@ package common;
 
 import server.Player;
 
+import java.util.List;
+
 public class WinMessage extends Message {
     String name;
     int[] code;
+    List<Player> allPlayers;
 
-    public WinMessage(String player, int[] code){
+    public WinMessage(String player, List<Player> players, int[] code){
         super(player);
         this.name = player;
         this.code=code;
+        this.allPlayers=players;
     }
 
     public String getName()
@@ -18,6 +22,11 @@ public class WinMessage extends Message {
     }
 
     public int[] getCode(){return this.code;}
+
+    public List<Player> getAllPlayers()
+    {
+        return this.allPlayers;
+    }
 
 
 }

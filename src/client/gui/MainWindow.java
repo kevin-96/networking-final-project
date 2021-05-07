@@ -38,7 +38,7 @@ public class MainWindow {
     private TempSettings settings;
     // private TempState state;
     private Connection connection;
-    private List<Player> players;//State
+    private List<Player> players;// State
 
     private boolean isDisplayingWinDialog;
     private Timer timer;
@@ -46,7 +46,7 @@ public class MainWindow {
     public TempSettings getSettings() {
         try {
             return settings.clone();
-        } catch (NullPointerException|CloneNotSupportedException e) {
+        } catch (NullPointerException | CloneNotSupportedException e) {
             System.err.println("Error in getSettings: " + e.getLocalizedMessage());
             return TempSettings.getDefaultSettings();
         }
@@ -92,9 +92,9 @@ public class MainWindow {
                             JSpinner input = (JSpinner) MainWindow.this.playerControls.getComponents()[i];
                             guessDigits.append(input.getValue());
                         }
-                        String[] guessToString=guessDigits.toString().split("");
-                        int[] guess= new int[4];
-                        for(int i=0;i<guess.length;i++) {
+                        String[] guessToString = guessDigits.toString().split("");
+                        int[] guess = new int[4];
+                        for (int i = 0; i < guess.length; i++) {
                             guess[i] = Integer.valueOf(guessToString[i]);
                         }
                         MainWindow.this.connection.guess(guess);
@@ -116,6 +116,7 @@ public class MainWindow {
     }
 
     public void processState(List<Player> players) {
+        System.out.println("Reached3");
         this.players = players;
 
         Player currentPlayer = null;
@@ -128,32 +129,41 @@ public class MainWindow {
         if (currentPlayer == null) {
             return;
         }
+        System.out.println("Reached4");
 
         DefaultTableModel guessModel = new DefaultTableModel(0, 3);
-        guessModel.addRow(new Object[]{"Guess", "Hits", "Blows"});
+        System.out.println("Reached5");
+        guessModel.addRow(new Object[] { "Guess", "Hits", "Blows" });
+        System.out.println("Reached6");
         for (Guess guess : currentPlayer.getAllGuesses()) {
-            guessModel.addRow(new Object[]{
-                Guess.convert(guess.digits),
-                String.valueOf(guess.hitCount),
-                String.valueOf(guess.blowCount)
-            });
+            guessModel.addRow(new Object[] { Guess.convert(guess.digits), String.valueOf(guess.hitCount),
+                    String.valueOf(guess.blowCount) });
         }
+        System.out.println("Reached7");
         this.currentPlayerGuesses.setModel(guessModel);
-
+        this.currentPlayerGuesses.revalidate();
+        this.currentPlayerGuesses.repaint();
+        System.out.println("Reached8");
         // Player rows
         DefaultTableModel playersModel = new DefaultTableModel(0, 3);
-        playersModel.addRow(new Object[]{"Player", "Hits", "Blows"});
+        System.out.println("Reached9");
+        playersModel.addRow(new Object[] { "Player", "Hits", "Blows" });
+        System.out.println("Reached10");
         for (Player player : players) {
-            playersModel.addRow(new Object[]{
-                player.getPlayerName(),
-                String.valueOf(player.getHitCount()),
-                String.valueOf(player.getBlowCount())
-            });
+            playersModel.addRow(new Object[] { player.getPlayerName(), String.valueOf(player.getHitCount()),
+                    String.valueOf(player.getBlowCount()) });
         }
+        System.out.println("Reached11");
         this.allPlayerHitCount.setModel(playersModel);
+        System.out.println("Reached12");
 
-        root.validate();
+        parent.revalidate();
+        parent.repaint();
+
+        root.revalidate();
         root.repaint();
+
+        System.out.println("Reached13");
     }
 
     public void display() {
@@ -181,15 +191,15 @@ public class MainWindow {
                 MainWindow.this.updateState();
             }
         });
-        
+
         this.playerControls.setLayout(new FlowLayout());
 
-        String[] guessColumns = new String[]{"Guess", "Hits", "Blows"};
+        String[] guessColumns = new String[] { "Guess", "Hits", "Blows" };
         DefaultTableModel guessModel = new DefaultTableModel(0, 3);
         guessModel.addRow(guessColumns);
         this.currentPlayerGuesses.setModel(guessModel);
 
-        String[] playerColumns = new String[]{"Player", "Hits", "Blows"};
+        String[] playerColumns = new String[] { "Player", "Hits", "Blows" };
         DefaultTableModel playersModel = new DefaultTableModel(0, 3);
         playersModel.addRow(playerColumns);
         allPlayerHitCount.setModel(playersModel);
@@ -198,47 +208,42 @@ public class MainWindow {
     }
 
     public void setConnection(String server, int port, String name) {
-        this.connection=new Connection(server,port,name);
+        this.connection = new Connection(server, port, name);
     }
-    public Connection getConnection()
-    {
+
+    public Connection getConnection() {
         return this.connection;
     }
 
     private void updateState() {
-        if(this.connection!=null)
-        {
-            Message state=this.connection.getState();
+        if (this.connection != null) {
+            Message state = this.connection.getState();
 
-            if(state instanceof SendAllPlayersMessage)
-            {
+            if (state instanceof SendAllPlayersMessage) {
                 processState(((SendAllPlayersMessage) state).getAllPlayers());
-            }
-            else if(state instanceof WinMessage)
-            {
-                timer.stop();
+            } else if (state instanceof WinMessage) {
+
                 // Clear out guesses by sending an empty state
-                System.out.println("Reached");
-                processState(new ArrayList<Player>());
+                System.out.println("Reached1");
 
-                //isDisplayingWinDialog = true;
-                WinMessage winner= (WinMessage) state;
+                // isDisplayingWinDialog = true;
+                WinMessage winner = (WinMessage) state;
                 String winText = winner.getName() + " broke the code! Code: " + intArrayToString(winner.getCode());
-                JOptionPane.showMessageDialog(null, winText, "Game Over!", JOptionPane.PLAIN_MESSAGE);                
+                JOptionPane.showMessageDialog(null, winText, "Game Over!", JOptionPane.PLAIN_MESSAGE);
+                System.out.println("Reached2");
+                processState(((WinMessage) state).getAllPlayers());
             }
 
-            //processState(this.players);
+            // processState(this.players);
         }
     }
 
-    public String intArrayToString(int arr[])
-    {
-        String str="";
-        for(int i=0;i<arr.length;i++) {
-            str+= Integer.toString(arr[i]);
+    public String intArrayToString(int arr[]) {
+        String str = "";
+        for (int i = 0; i < arr.length; i++) {
+            str += Integer.toString(arr[i]);
         }
         return str;
     }
-
 
 }
