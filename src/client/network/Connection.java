@@ -16,6 +16,7 @@ import common.*;
 import server.GameServer;
 import server.Player;
 
+import javax.swing.*;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -28,20 +29,15 @@ public class Connection implements Serializable {
     private ObjectInputStream in;
     private transient ObjectOutputStream out;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         new Connection("127.0.0.1", 1234, "Message");
     }
 
-    public Connection(String hostname, int port, String name) {
+    public Connection(String hostname, int port, String name) throws Exception {
         this.hostname = hostname;
         this.port = port;
         this.name = name;
-        try {
-            establishConnection();
-        } catch (Exception e) {
-            System.out.println("Connection could not be established");
-        }
-
+        establishConnection();
     }
 
     public void establishConnection() throws Exception {
@@ -121,28 +117,26 @@ public class Connection implements Serializable {
         return null;
     }
 
-    public JoinGameMessage joinGame() {
-
-        try {
-            // Occurs when the user first joins a games
-            this.out.writeObject(new JoinMessage(this.name,true));// Hard coded true
-            this.out.reset();
-            Object response = this.in.readObject();
-            if (response instanceof JoinGameMessage) {
-                JoinGameMessage jgm=(JoinGameMessage) response;
-                System.out.println(jgm.getMessage());
-                return jgm;
-            }
-            else
-            {
-                System.out.println("Error Joining game");
-                return null;
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void joinGame() throws Exception {
+        // Occurs when the user first joins a games
+        this.out.writeObject(new JoinMessage(this.name,true));// Hard coded true
+        this.out.reset();
+        Object response = this.in.readObject();
+        if (response instanceof JoinGameMessage) {
+            JoinGameMessage jgm=(JoinGameMessage) response;
+            System.out.println(jgm.getMessage());
         }
-        return null;
+        else
+        {
+            String error;
+            if (response instanceof ErrorMessage) {
+                error = ((ErrorMessage) response).getMessage();
+            } else {
+                error = "Unknown error joining game";
+            }
+            System.out.println(error);
+            throw new Exception(error);
+        }
     }
 
     public Message getState()

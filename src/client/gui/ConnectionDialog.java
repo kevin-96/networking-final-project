@@ -92,8 +92,15 @@ public class ConnectionDialog extends JDialog {
         String playerName= nameField.getText();
 
         // TODO try to connect
-        window.setConnection(server,port, playerName);
+
         boolean isConnected = true;
+
+        try{
+            window.setConnection(server,port, playerName);
+        } catch (Exception e) {
+            isConnected = false;
+            JOptionPane.showMessageDialog(null, "Connection failed: " + e.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
 
         TempSettings settings = window.getSettings();
         settings.serverAddress = server;
@@ -105,8 +112,6 @@ public class ConnectionDialog extends JDialog {
 
         if (isConnected) {
             dispose();
-        } else {
-            JOptionPane.showMessageDialog(null, "Connection failed", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

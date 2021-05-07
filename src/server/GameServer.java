@@ -106,15 +106,20 @@ public class GameServer {
         }
     }
 
-    private Message processClientJoinMessage(JoinMessage msg) {
-        try {
-            // this.connections.add(msg.getConnection());
-            return new JoinGameMessage(state.getAllPlayers(), state.didGameStart());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Message("Error");
+    private boolean playerExists(String name) {
+        if (name == null) {
+            return false;
         }
+        for (Player player : state.getAllPlayers())  {
+            if (player.getPlayerName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    private Message processClientJoinMessage(JoinMessage msg) {
+        return new JoinGameMessage(state.getAllPlayers(), state.didGameStart());
     }
 
     private SettingsMessage processClientCreateGameMessage(CreateGameMessage msg) { // bool
@@ -258,14 +263,16 @@ public class GameServer {
                     Message msg = (Message) input.readObject();
                     if (msg instanceof JoinMessage) {
                         JoinMessage jm = (JoinMessage) msg;
-                        if(jm.getIsPlaying()) {
+                        boolean _playerExists = playerExists(jm.getName());
+                        if (!_playerExists && jm.getIsPlaying()) {
                             state.addPlayer(jm.getName());
+                            this.playerName = jm.getName();
+                        } else {
+                            this.playerName = null;
                         }
-                        this.playerName = jm.getName();
-                        Message toSend = processClientJoinMessage(jm);
+                        Message toSend = _playerExists ? new ErrorMessage("Player already exists") : processClientJoinMessage(jm);
                         this.output.writeObject(toSend);
                         this.output.flush();
-
                     } else if (msg instanceof GuessMessage) {
                         processClientGuessMessage((GuessMessage) msg);
                         this.output.reset();
